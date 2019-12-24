@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewDay(t *testing.T) {
-	day := &day{
+	expected := &day{
 		spacecraft: spacecraft{
 			modules: []module{
 				{mass: 12},
@@ -21,7 +22,10 @@ func TestNewDay(t *testing.T) {
 14
 1969
 100756`
-	assert.Equal(t, day, NewDay(input))
+	actual, err := NewDay(input)
+	require.NoError(t, err)
+
+	assert.Equal(t, expected, actual)
 }
 
 func TestString(t *testing.T) {
@@ -39,7 +43,11 @@ func TestSolvePartOne(t *testing.T) {
 			},
 		},
 	}
-	assert.Equal(t, fuel(34241), day.SolvePartOne())
+
+	answer, err := day.SolvePartOne()
+	require.NoError(t, err)
+
+	assert.Equal(t, fuel(34241), answer)
 }
 
 func TestSolvePartTwo(t *testing.T) {
@@ -53,5 +61,9 @@ func TestSolvePartTwo(t *testing.T) {
 			},
 		},
 	}
-	assert.Equal(t, fuel(51316), day.SolvePartTwo())
+
+	answer, err := day.SolvePartTwo()
+	require.NoError(t, err)
+
+	assert.Equal(t, fuel(51316), answer)
 }

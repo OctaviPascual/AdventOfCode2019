@@ -22,11 +22,14 @@ type day struct {
 	spacecraft spacecraft
 }
 
-func NewDay(input string) model.Day {
+func NewDay(input string) (model.Day, error) {
 	lines := strings.Split(input, "\n")
 	modules := make([]module, 0, len(input))
 	for _, line := range lines {
-		mass, _ := strconv.Atoi(line)
+		mass, err := strconv.Atoi(line)
+		if err != nil {
+			return nil, fmt.Errorf("invalid mass %s: %v", line, err)
+		}
 		module := module{
 			mass: mass,
 		}
@@ -36,7 +39,7 @@ func NewDay(input string) model.Day {
 		spacecraft: spacecraft{
 			modules: modules,
 		},
-	}
+	}, nil
 }
 
 func (m module) fuelRequired() fuel {
@@ -74,10 +77,10 @@ func (f fuel) String() string {
 	return fmt.Sprintf("%d", f)
 }
 
-func (d day) SolvePartOne() model.Answer {
-	return d.spacecraft.totalFuelRequired()
+func (d day) SolvePartOne() (model.Answer, error) {
+	return d.spacecraft.totalFuelRequired(), nil
 }
 
-func (d day) SolvePartTwo() model.Answer {
-	return d.spacecraft.totalFuelRequiredWithAddedFuel()
+func (d day) SolvePartTwo() (model.Answer, error) {
+	return d.spacecraft.totalFuelRequiredWithAddedFuel(), nil
 }

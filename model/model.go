@@ -1,8 +1,8 @@
 package model
 
 type Day interface {
-	SolvePartOne() Answer
-	SolvePartTwo() Answer
+	SolvePartOne() (Answer, error)
+	SolvePartTwo() (Answer, error)
 }
 
 type Answer interface {
