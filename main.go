@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/OctaviPascual/AdventOfCode2019/day01"
+	"github.com/OctaviPascual/AdventOfCode2019/day02"
 	"github.com/OctaviPascual/AdventOfCode2019/model"
 )
 
@@ -16,6 +17,10 @@ var days = []struct {
 	{
 		filename:    "./day01/day01.txt",
 		constructor: day01.NewDay,
+	},
+	{
+		filename:    "./day02/day02.txt",
+		constructor: day02.NewDay,
 	},
 }
 

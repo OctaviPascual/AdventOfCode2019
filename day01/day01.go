@@ -18,7 +18,7 @@ type spacecraft struct {
 	modules []module
 }
 
-type Day struct {
+type day struct {
 	spacecraft spacecraft
 }
 
@@ -32,7 +32,7 @@ func NewDay(input string) model.Day {
 		}
 		modules = append(modules, module)
 	}
-	return &Day{
+	return &day{
 		spacecraft: spacecraft{
 			modules: modules,
 		},
@@ -74,10 +74,10 @@ func (f fuel) String() string {
 	return fmt.Sprintf("%d", f)
 }
 
-func (d Day) SolvePartOne() model.Answer {
+func (d day) SolvePartOne() model.Answer {
 	return d.spacecraft.totalFuelRequired()
 }
 
-func (d Day) SolvePartTwo() model.Answer {
+func (d day) SolvePartTwo() model.Answer {
 	return d.spacecraft.totalFuelRequiredWithAddedFuel()
 }
