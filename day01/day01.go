@@ -22,7 +22,7 @@ type Day struct {
 	spacecraft spacecraft
 }
 
-func NewDay(input string) *Day {
+func NewDay(input string) model.Day {
 	lines := strings.Split(input, "\n")
 	modules := make([]module, 0, len(input))
 	for _, line := range lines {
@@ -70,8 +70,8 @@ func (s spacecraft) totalFuelRequiredWithAddedFuel() fuel {
 	return totalFuelRequired
 }
 
-func (f fuel) Format() string {
-	return fmt.Sprintf("%v", f)
+func (f fuel) String() string {
+	return fmt.Sprintf("%d", f)
 }
 
 func (d Day) SolvePartOne() model.Answer {

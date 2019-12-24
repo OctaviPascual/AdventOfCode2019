@@ -26,7 +26,7 @@ func TestNewDay(t *testing.T) {
 }
 
 func TestFormat(t *testing.T) {
-	assert.Equal(t, "34241", fuel(34241).Format())
+	assert.Equal(t, "34241", fuel(34241).String())
 }
 
 func TestSolvePartOne(t *testing.T) {
