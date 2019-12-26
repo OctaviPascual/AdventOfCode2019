@@ -1,0 +1,20 @@
+package dayXX
+
+import (
+	"github.com/OctaviPascual/AdventOfCode2019/model"
+)
+
+type day struct {
+}
+
+func NewDay(input string) (model.Day, error) {
+	return &day{}, nil
+}
+
+func (d day) SolvePartOne() (model.Answer, error) {
+	return nil, nil
+}
+
+func (d day) SolvePartTwo() (model.Answer, error) {
+	return nil, nil
+}

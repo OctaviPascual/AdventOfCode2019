@@ -1,0 +1,38 @@
+package dayXX
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestNewDay(t *testing.T) {
+	expected := &day{}
+	input := ``
+	actual, err := NewDay(input)
+	require.NoError(t, err)
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestString(t *testing.T) {
+}
+
+func TestSolvePartOne(t *testing.T) {
+	day := &day{}
+
+	answer, err := day.SolvePartOne()
+	require.NoError(t, err)
+
+	assert.Equal(t, nil, answer)
+}
+
+func TestSolvePartTwo(t *testing.T) {
+	day := &day{}
+
+	answer, err := day.SolvePartTwo()
+	require.NoError(t, err)
+
+	assert.Equal(t, nil, answer)
+}

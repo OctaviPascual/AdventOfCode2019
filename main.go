@@ -30,7 +30,6 @@ func main() {
 		bytes, err := ioutil.ReadFile(day.filename)
 		if err != nil {
 			log.Fatalf("could not read file %s: %v", day.filename, err)
-			panic(err)
 		}
 		input := string(bytes)
 		input = strings.TrimSuffix(input, "\n")
