@@ -27,7 +27,9 @@ curl "${PUZZLE_URL}" -H "cookie: session=${AOC_SESSION_COOKIE}" -o "${PUZZLE_FIL
 chmod 0444 "${PUZZLE_FILE}"
 
 cp "bootstrap/dayXX.template" "${GO_FILE}"
+chmod 0644 "${GO_FILE}"
 sed -i "" "s/XX/${DAY}/g" "${GO_FILE}"
 
 cp "bootstrap/dayXX_test.template" "${GO_TEST_FILE}"
+chmod 0644 "${GO_TEST_FILE}"
 sed -i "" "s/XX/${DAY}/g" "${GO_TEST_FILE}"
