@@ -23,35 +23,57 @@ type Day struct {
 
 // NewDay returns a new Day that solves part one and two for the given input
 func NewDay(input string) (*Day, error) {
-	lines := strings.Split(input, "\n")
-	modules := make([]module, 0, len(input))
-	for _, line := range lines {
-		mass, err := strconv.Atoi(line)
-		if err != nil {
-			return nil, fmt.Errorf("invalid mass %s: %v", line, err)
-		}
-		module := module{
-			mass: mass,
-		}
-		modules = append(modules, module)
+	spacecraftString := strings.Split(input, "\n")
+
+	spacecraft, err := parseSpacecraft(spacecraftString)
+	if err != nil {
+		return nil, fmt.Errorf("invalid spacecraft %s: %w", spacecraftString, err)
 	}
+
 	return &Day{
-		spacecraft: spacecraft{
-			modules: modules,
-		},
+		spacecraft: *spacecraft,
 	}, nil
 }
 
-func (m module) fuelRequired() fuel {
-	return fuel(m.mass/3 - 2)
+// SolvePartOne solves part one
+func (d Day) SolvePartOne() (string, error) {
+	fuel := d.spacecraft.totalFuelRequired()
+	return fmt.Sprintf("%d", fuel), nil
 }
 
-func (f fuel) fuelRequired() fuel {
-	fuelRequired := f/3 - 2
-	if fuelRequired <= 0 {
-		return 0
+// SolvePartTwo solves part two
+func (d Day) SolvePartTwo() (string, error) {
+	fuel := d.spacecraft.totalFuelRequiredWithAddedFuel()
+	return fmt.Sprintf("%d", fuel), nil
+}
+
+func parseSpacecraft(spacecraftString []string) (*spacecraft, error) {
+	modules := make([]module, 0, len(spacecraftString))
+
+	for _, moduleString := range spacecraftString {
+
+		module, err := parseModule(moduleString)
+		if err != nil {
+			return nil, fmt.Errorf("invalid module %s: %w", moduleString, err)
+		}
+
+		modules = append(modules, *module)
 	}
-	return fuelRequired + fuelRequired.fuelRequired()
+
+	return &spacecraft{
+		modules: modules,
+	}, nil
+}
+
+func parseModule(moduleString string) (*module, error) {
+	mass, err := strconv.Atoi(moduleString)
+	if err != nil {
+		return nil, fmt.Errorf("invalid mass %s: %w", moduleString, err)
+	}
+
+	return &module{
+		mass: mass,
+	}, nil
 }
 
 func (s spacecraft) totalFuelRequired() fuel {
@@ -60,6 +82,10 @@ func (s spacecraft) totalFuelRequired() fuel {
 		totalFuelRequired += module.fuelRequired()
 	}
 	return totalFuelRequired
+}
+
+func (m module) fuelRequired() fuel {
+	return fuel(m.mass/3 - 2)
 }
 
 func (s spacecraft) totalFuelRequiredWithAddedFuel() fuel {
@@ -73,14 +99,10 @@ func (s spacecraft) totalFuelRequiredWithAddedFuel() fuel {
 	return totalFuelRequired
 }
 
-// SolvePartOne solves part one
-func (d Day) SolvePartOne() (string, error) {
-	fuel := d.spacecraft.totalFuelRequired()
-	return fmt.Sprintf("%d", fuel), nil
-}
-
-// SolvePartTwo solves part two
-func (d Day) SolvePartTwo() (string, error) {
-	fuel := d.spacecraft.totalFuelRequiredWithAddedFuel()
-	return fmt.Sprintf("%d", fuel), nil
+func (f fuel) fuelRequired() fuel {
+	fuelRequired := f/3 - 2
+	if fuelRequired <= 0 {
+		return 0
+	}
+	return fuelRequired + fuelRequired.fuelRequired()
 }
