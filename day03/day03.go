@@ -40,11 +40,13 @@ type circuit struct {
 type distance uint
 type signalDelay uint
 
+// Day holds the data needed to solve part one and part two
 type Day struct {
 	wire1 wire
 	wire2 wire
 }
 
+// NewDay returns a new Day that solves part one and two for the given input
 func NewDay(input string) (*Day, error) {
 	paths := strings.Split(input, "\n")
 	if len(paths) != 2 {
@@ -103,6 +105,7 @@ func parseSegment(segmentString string) (segment, error) {
 	}, nil
 }
 
+// SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
 	circuit := circuit{
 		ports1: getPortsFromWire(d.wire1),
@@ -115,6 +118,7 @@ func (d Day) SolvePartOne() (string, error) {
 	return fmt.Sprintf("%d", distance), nil
 }
 
+// SolvePartOne solves part two
 func (d Day) SolvePartTwo() (string, error) {
 	circuit := circuit{
 		ports1: getPortsFromWire(d.wire1),

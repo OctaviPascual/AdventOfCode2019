@@ -16,10 +16,12 @@ type spacecraft struct {
 	modules []module
 }
 
+// Day holds the data needed to solve part one and part two
 type Day struct {
 	spacecraft spacecraft
 }
 
+// NewDay returns a new Day that solves part one and two for the given input
 func NewDay(input string) (*Day, error) {
 	lines := strings.Split(input, "\n")
 	modules := make([]module, 0, len(input))
@@ -71,11 +73,13 @@ func (s spacecraft) totalFuelRequiredWithAddedFuel() fuel {
 	return totalFuelRequired
 }
 
+// SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
 	fuel := d.spacecraft.totalFuelRequired()
 	return fmt.Sprintf("%d", fuel), nil
 }
 
+// SolvePartOne solves part two
 func (d Day) SolvePartTwo() (string, error) {
 	fuel := d.spacecraft.totalFuelRequiredWithAddedFuel()
 	return fmt.Sprintf("%d", fuel), nil

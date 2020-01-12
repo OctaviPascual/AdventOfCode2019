@@ -21,11 +21,13 @@ type intcodeProgram struct {
 	memory []int
 }
 
+// Day holds the data needed to solve part one and part two
 type Day struct {
 	initialState   []int
 	intcodeProgram intcodeProgram
 }
 
+// NewDay returns a new Day that solves part one and two for the given input
 func NewDay(input string) (*Day, error) {
 	values := strings.Split(input, ",")
 	initialState := make([]int, 0, len(values))
@@ -68,6 +70,7 @@ func (i intcodeProgram) run() error {
 	}
 }
 
+// SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
 	intcodeOutput, err := d.runIntcodeProgram(12, 2)
 	if err != nil {
@@ -76,6 +79,7 @@ func (d Day) SolvePartOne() (string, error) {
 	return fmt.Sprintf("%d", intcodeOutput), nil
 }
 
+// SolvePartOne solves part two
 func (d Day) SolvePartTwo() (string, error) {
 	for noun := 0; noun < 100; noun++ {
 		for verb := 0; verb < 100; verb++ {

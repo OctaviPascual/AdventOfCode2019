@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewDay(t *testing.T) {
-	expected := &day{}
+	expected := &Day{}
 	input := ``
 	actual, err := NewDay(input)
 	require.NoError(t, err)
@@ -17,19 +17,19 @@ func TestNewDay(t *testing.T) {
 }
 
 func TestSolvePartOne(t *testing.T) {
-	day := &day{}
+	day := &Day{}
 
 	answer, err := day.SolvePartOne()
 	require.NoError(t, err)
 
-	assert.Equal(t, nil, answer)
+	assert.Equal(t, "", answer)
 }
 
 func TestSolvePartTwo(t *testing.T) {
-	day := &day{}
+	day := &Day{}
 
 	answer, err := day.SolvePartTwo()
 	require.NoError(t, err)
 
-	assert.Equal(t, nil, answer)
+	assert.Equal(t, "", answer)
 }
