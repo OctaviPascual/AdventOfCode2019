@@ -14,7 +14,7 @@ func (d Day) SolvePartOne() (string, error) {
 	return "", nil
 }
 
-// SolvePartOne solves part two
+// SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
 	return "", nil
 }

@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	Output = 0
-	Noun   = 1
-	Verb   = 2
+	outputPosition = 0
+	nounPosition   = 1
+	verbPosition   = 2
 
-	DesiredIntcodeOutput = intcodeOutput(19690720)
+	desiredIntcodeOutput = intcodeOutput(19690720)
 )
 
 type intcodeOutput int
@@ -79,7 +79,7 @@ func (d Day) SolvePartOne() (string, error) {
 	return fmt.Sprintf("%d", intcodeOutput), nil
 }
 
-// SolvePartOne solves part two
+// SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
 	for noun := 0; noun < 100; noun++ {
 		for verb := 0; verb < 100; verb++ {
@@ -87,7 +87,7 @@ func (d Day) SolvePartTwo() (string, error) {
 			if err != nil {
 				return "", err
 			}
-			if intcodeOutput == DesiredIntcodeOutput {
+			if intcodeOutput == desiredIntcodeOutput {
 				return fmt.Sprintf("%d", 100*noun+verb), nil
 			}
 		}
@@ -97,11 +97,11 @@ func (d Day) SolvePartTwo() (string, error) {
 
 func (d Day) runIntcodeProgram(noun, verb int) (intcodeOutput, error) {
 	copy(d.intcodeProgram.memory, d.initialState)
-	d.intcodeProgram.memory[Noun] = noun
-	d.intcodeProgram.memory[Verb] = verb
+	d.intcodeProgram.memory[nounPosition] = noun
+	d.intcodeProgram.memory[verbPosition] = verb
 	err := d.intcodeProgram.run()
 	if err != nil {
 		return intcodeOutput(0), err
 	}
-	return intcodeOutput(d.intcodeProgram.memory[Output]), nil
+	return intcodeOutput(d.intcodeProgram.memory[outputPosition]), nil
 }

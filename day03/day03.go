@@ -10,10 +10,10 @@ import (
 type direction rune
 
 const (
-	Up    direction = 'U'
-	Right           = 'R'
-	Down            = 'D'
-	Left            = 'L'
+	up    direction = 'U'
+	right direction = 'R'
+	down  direction = 'D'
+	left  direction = 'L'
 )
 
 type segment struct {
@@ -89,7 +89,7 @@ func parseSegment(segmentString string) (segment, error) {
 
 	direction := direction(segmentString[0])
 	switch direction {
-	case Up, Left, Right, Down:
+	case up, left, right, down:
 	default:
 		return segment{}, fmt.Errorf("invalid direction %c", segmentString[0])
 	}
@@ -118,7 +118,7 @@ func (d Day) SolvePartOne() (string, error) {
 	return fmt.Sprintf("%d", distance), nil
 }
 
-// SolvePartOne solves part two
+// SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
 	circuit := circuit{
 		ports1: getPortsFromWire(d.wire1),
@@ -141,7 +141,7 @@ func getPortsFromWire(wire wire) map[port]int {
 			if _, ok := ports[currentPort]; !ok {
 				ports[currentPort] = steps
 			}
-			steps += 1
+			steps++
 		}
 	}
 	return ports
@@ -149,13 +149,13 @@ func getPortsFromWire(wire wire) map[port]int {
 
 func (p port) nextPort(direction direction) port {
 	switch direction {
-	case Up:
+	case up:
 		return port{x: p.x, y: p.y + 1}
-	case Down:
+	case down:
 		return port{x: p.x, y: p.y - 1}
-	case Right:
+	case right:
 		return port{x: p.x + 1, y: p.y}
-	case Left:
+	case left:
 		return port{x: p.x - 1, y: p.y}
 	}
 	return p

@@ -79,7 +79,7 @@ func (d Day) SolvePartOne() (string, error) {
 	return fmt.Sprintf("%d", fuel), nil
 }
 
-// SolvePartOne solves part two
+// SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
 	fuel := d.spacecraft.totalFuelRequiredWithAddedFuel()
 	return fmt.Sprintf("%d", fuel), nil

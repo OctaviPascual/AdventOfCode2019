@@ -11,6 +11,7 @@ import (
 	"github.com/OctaviPascual/AdventOfCode2019/day03"
 )
 
+// Day is the interface that wraps SolvePartOne and SolvePartTwo methods
 type Day interface {
 	SolvePartOne() (string, error)
 	SolvePartTwo() (string, error)

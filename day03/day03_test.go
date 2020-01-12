@@ -11,21 +11,21 @@ func TestNewDay(t *testing.T) {
 	expected := &Day{
 		wire1: wire{
 			{
-				direction: Right,
+				direction: right,
 				length:    1,
 			},
 			{
-				direction: Up,
+				direction: up,
 				length:    2,
 			},
 		},
 		wire2: wire{
 			{
-				direction: Left,
+				direction: left,
 				length:    2,
 			},
 			{
-				direction: Down,
+				direction: down,
 				length:    1,
 			},
 		},
