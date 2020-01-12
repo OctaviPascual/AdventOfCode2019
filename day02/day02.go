@@ -30,20 +30,63 @@ type Day struct {
 // NewDay returns a new Day that solves part one and two for the given input
 func NewDay(input string) (*Day, error) {
 	values := strings.Split(input, ",")
-	initialState := make([]int, 0, len(values))
-	for _, value := range values {
-		val, err := strconv.Atoi(value)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value %s: %v", value, err)
-		}
-		initialState = append(initialState, val)
+
+	initialState, err := parseInitialState(values)
+	if err != nil {
+		return nil, fmt.Errorf("invalid values %s: %w", values, err)
 	}
+
 	return &Day{
 		initialState: initialState,
 		intcodeProgram: intcodeProgram{
 			memory: make([]int, len(initialState)),
 		},
 	}, nil
+}
+
+// SolvePartOne solves part one
+func (d Day) SolvePartOne() (string, error) {
+	intcodeOutput, err := d.runIntcodeProgram(12, 2)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", intcodeOutput), nil
+}
+
+// SolvePartTwo solves part two
+func (d Day) SolvePartTwo() (string, error) {
+	for noun := 0; noun < 100; noun++ {
+		for verb := 0; verb < 100; verb++ {
+
+			intcodeOutput, err := d.runIntcodeProgram(noun, verb)
+			if err != nil {
+				return "", err
+			}
+
+			if intcodeOutput == desiredIntcodeOutput {
+				return fmt.Sprintf("%d", 100*noun+verb), nil
+			}
+		}
+	}
+
+	return "", errors.New("could not find combination to produce desired output")
+}
+
+func parseInitialState(values []string) ([]int, error) {
+	initialState := make([]int, 0, len(values))
+
+	for _, valueString := range values {
+
+		val, err := strconv.Atoi(valueString)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value %s: %w", valueString, err)
+		}
+
+		initialState = append(initialState, val)
+	}
+
+	return initialState, nil
 }
 
 func (i intcodeProgram) run() error {
@@ -70,38 +113,15 @@ func (i intcodeProgram) run() error {
 	}
 }
 
-// SolvePartOne solves part one
-func (d Day) SolvePartOne() (string, error) {
-	intcodeOutput, err := d.runIntcodeProgram(12, 2)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%d", intcodeOutput), nil
-}
-
-// SolvePartTwo solves part two
-func (d Day) SolvePartTwo() (string, error) {
-	for noun := 0; noun < 100; noun++ {
-		for verb := 0; verb < 100; verb++ {
-			intcodeOutput, err := d.runIntcodeProgram(noun, verb)
-			if err != nil {
-				return "", err
-			}
-			if intcodeOutput == desiredIntcodeOutput {
-				return fmt.Sprintf("%d", 100*noun+verb), nil
-			}
-		}
-	}
-	return "", errors.New("could not find combination to produce desired output")
-}
-
 func (d Day) runIntcodeProgram(noun, verb int) (intcodeOutput, error) {
 	copy(d.intcodeProgram.memory, d.initialState)
 	d.intcodeProgram.memory[nounPosition] = noun
 	d.intcodeProgram.memory[verbPosition] = verb
+
 	err := d.intcodeProgram.run()
 	if err != nil {
-		return intcodeOutput(0), err
+		return intcodeOutput(0), fmt.Errorf("error running intcode program: %w", err)
 	}
+
 	return intcodeOutput(d.intcodeProgram.memory[outputPosition]), nil
 }
