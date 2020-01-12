@@ -1,0 +1,28 @@
+name: CI
+
+on: [push]
+
+jobs:
+  imports:
+    name: Imports
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: check
+      uses: grandcolline/golang-github-actions@v1.1.0
+      with:
+        run: imports
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    name: Test
+    runs-on: macOS-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+    - name: Checkout code
+      uses: actions/checkout@v1
+    - name: Test
+      run: go test ./...
