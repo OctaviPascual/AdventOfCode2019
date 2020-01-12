@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewDay(t *testing.T) {
-	expected := &day{
+	expected := &Day{
 		spacecraft: spacecraft{
 			modules: []module{
 				{mass: 12},
@@ -28,12 +28,8 @@ func TestNewDay(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestString(t *testing.T) {
-	assert.Equal(t, "34241", fuel(34241).String())
-}
-
 func TestSolvePartOne(t *testing.T) {
-	day := &day{
+	day := &Day{
 		spacecraft: spacecraft{
 			modules: []module{
 				{mass: 12},
@@ -47,11 +43,11 @@ func TestSolvePartOne(t *testing.T) {
 	answer, err := day.SolvePartOne()
 	require.NoError(t, err)
 
-	assert.Equal(t, fuel(34241), answer)
+	assert.Equal(t, "34241", answer)
 }
 
 func TestSolvePartTwo(t *testing.T) {
-	day := &day{
+	day := &Day{
 		spacecraft: spacecraft{
 			modules: []module{
 				{mass: 12},
@@ -65,5 +61,5 @@ func TestSolvePartTwo(t *testing.T) {
 	answer, err := day.SolvePartTwo()
 	require.NoError(t, err)
 
-	assert.Equal(t, fuel(51316), answer)
+	assert.Equal(t, "51316", answer)
 }

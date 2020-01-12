@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/OctaviPascual/AdventOfCode2019/model"
 )
 
 type fuel int
@@ -18,11 +16,11 @@ type spacecraft struct {
 	modules []module
 }
 
-type day struct {
+type Day struct {
 	spacecraft spacecraft
 }
 
-func NewDay(input string) (model.Day, error) {
+func NewDay(input string) (*Day, error) {
 	lines := strings.Split(input, "\n")
 	modules := make([]module, 0, len(input))
 	for _, line := range lines {
@@ -35,7 +33,7 @@ func NewDay(input string) (model.Day, error) {
 		}
 		modules = append(modules, module)
 	}
-	return &day{
+	return &Day{
 		spacecraft: spacecraft{
 			modules: modules,
 		},
@@ -73,14 +71,12 @@ func (s spacecraft) totalFuelRequiredWithAddedFuel() fuel {
 	return totalFuelRequired
 }
 
-func (f fuel) String() string {
-	return fmt.Sprintf("%d", f)
+func (d Day) SolvePartOne() (string, error) {
+	fuel := d.spacecraft.totalFuelRequired()
+	return fmt.Sprintf("%d", fuel), nil
 }
 
-func (d day) SolvePartOne() (model.Answer, error) {
-	return d.spacecraft.totalFuelRequired(), nil
-}
-
-func (d day) SolvePartTwo() (model.Answer, error) {
-	return d.spacecraft.totalFuelRequiredWithAddedFuel(), nil
+func (d Day) SolvePartTwo() (string, error) {
+	fuel := d.spacecraft.totalFuelRequiredWithAddedFuel()
+	return fmt.Sprintf("%d", fuel), nil
 }

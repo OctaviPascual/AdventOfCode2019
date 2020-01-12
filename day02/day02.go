@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/OctaviPascual/AdventOfCode2019/model"
 )
 
 const (
@@ -18,18 +16,17 @@ const (
 )
 
 type intcodeOutput int
-type answer int
 
 type intcodeProgram struct {
 	memory []int
 }
 
-type day struct {
+type Day struct {
 	initialState   []int
 	intcodeProgram intcodeProgram
 }
 
-func NewDay(input string) (model.Day, error) {
+func NewDay(input string) (*Day, error) {
 	values := strings.Split(input, ",")
 	initialState := make([]int, 0, len(values))
 	for _, value := range values {
@@ -39,7 +36,7 @@ func NewDay(input string) (model.Day, error) {
 		}
 		initialState = append(initialState, val)
 	}
-	return &day{
+	return &Day{
 		initialState: initialState,
 		intcodeProgram: intcodeProgram{
 			memory: make([]int, len(initialState)),
@@ -71,34 +68,30 @@ func (i intcodeProgram) run() error {
 	}
 }
 
-func (v intcodeOutput) String() string {
-	return fmt.Sprintf("%d", v)
+func (d Day) SolvePartOne() (string, error) {
+	intcodeOutput, err := d.runIntcodeProgram(12, 2)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d", intcodeOutput), nil
 }
 
-func (a answer) String() string {
-	return fmt.Sprintf("%d", a)
-}
-
-func (d day) SolvePartOne() (model.Answer, error) {
-	return d.runIntcodeProgram(12, 2)
-}
-
-func (d day) SolvePartTwo() (model.Answer, error) {
+func (d Day) SolvePartTwo() (string, error) {
 	for noun := 0; noun < 100; noun++ {
 		for verb := 0; verb < 100; verb++ {
 			intcodeOutput, err := d.runIntcodeProgram(noun, verb)
 			if err != nil {
-				return nil, err
+				return "", err
 			}
 			if intcodeOutput == DesiredIntcodeOutput {
-				return answer(100*noun + verb), nil
+				return fmt.Sprintf("%d", 100*noun+verb), nil
 			}
 		}
 	}
-	return nil, errors.New("could not find combination to produce desired output")
+	return "", errors.New("could not find combination to produce desired output")
 }
 
-func (d day) runIntcodeProgram(noun, verb int) (intcodeOutput, error) {
+func (d Day) runIntcodeProgram(noun, verb int) (intcodeOutput, error) {
 	copy(d.intcodeProgram.memory, d.initialState)
 	d.intcodeProgram.memory[Noun] = noun
 	d.intcodeProgram.memory[Verb] = verb

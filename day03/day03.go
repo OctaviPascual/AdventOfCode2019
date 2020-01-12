@@ -5,8 +5,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-
-	"github.com/OctaviPascual/AdventOfCode2019/model"
 )
 
 type direction rune
@@ -42,12 +40,12 @@ type circuit struct {
 type distance uint
 type signalDelay uint
 
-type day struct {
+type Day struct {
 	wire1 wire
 	wire2 wire
 }
 
-func NewDay(input string) (model.Day, error) {
+func NewDay(input string) (*Day, error) {
 	paths := strings.Split(input, "\n")
 	if len(paths) != 2 {
 		return nil, fmt.Errorf("invalid number of wire paths %d", len(paths))
@@ -63,7 +61,7 @@ func NewDay(input string) (model.Day, error) {
 		return nil, fmt.Errorf("invalid wire path %s: %w", paths[1], err)
 	}
 
-	return &day{
+	return &Day{
 		wire1: path1,
 		wire2: path2,
 	}, nil
@@ -105,28 +103,28 @@ func parseSegment(segmentString string) (segment, error) {
 	}, nil
 }
 
-func (d distance) String() string {
-	return fmt.Sprintf("%d", d)
-}
-
-func (d day) SolvePartOne() (model.Answer, error) {
+func (d Day) SolvePartOne() (string, error) {
 	circuit := circuit{
 		ports1: getPortsFromWire(d.wire1),
 		ports2: getPortsFromWire(d.wire2),
 	}
-	return circuit.findMinimumDistance()
+	distance, err := circuit.findMinimumDistance()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d", distance), nil
 }
 
-func (sd signalDelay) String() string {
-	return fmt.Sprintf("%d", sd)
-}
-
-func (d day) SolvePartTwo() (model.Answer, error) {
+func (d Day) SolvePartTwo() (string, error) {
 	circuit := circuit{
 		ports1: getPortsFromWire(d.wire1),
 		ports2: getPortsFromWire(d.wire2),
 	}
-	return circuit.findMinimumSignalDelay()
+	signalDelay, err := circuit.findMinimumSignalDelay()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d", signalDelay), nil
 }
 
 func getPortsFromWire(wire wire) map[port]int {

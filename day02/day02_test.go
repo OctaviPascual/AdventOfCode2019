@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewDay(t *testing.T) {
-	expected := &day{
+	expected := &Day{
 		initialState: []int{1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50},
 		intcodeProgram: intcodeProgram{
 			memory: make([]int, 12),
@@ -20,10 +20,6 @@ func TestNewDay(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, expected, actual)
-}
-
-func TestString(t *testing.T) {
-	assert.Equal(t, "1", intcodeOutput(1).String())
 }
 
 func TestRun(t *testing.T) {
@@ -83,7 +79,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestSolvePartOne(t *testing.T) {
-	day := &day{
+	day := &Day{
 		initialState: []int{1, 0, 0, 0, 99, 99, 99, 99, 99, 99, 99, 99, 99},
 		intcodeProgram: intcodeProgram{
 			memory: make([]int, 13),
@@ -93,11 +89,11 @@ func TestSolvePartOne(t *testing.T) {
 	answer, err := day.SolvePartOne()
 	require.NoError(t, err)
 
-	assert.Equal(t, intcodeOutput(101), answer)
+	assert.Equal(t, "101", answer)
 }
 
 func TestSolvePartTwo(t *testing.T) {
-	day := &day{
+	day := &Day{
 		initialState: append([]int{1, 0, 0, 0, 99, 19690720}, make([]int, 94)...),
 		intcodeProgram: intcodeProgram{
 			memory: make([]int, 100),
@@ -107,5 +103,5 @@ func TestSolvePartTwo(t *testing.T) {
 	actual, err := day.SolvePartTwo()
 	require.NoError(t, err)
 
-	assert.Equal(t, answer(305), actual)
+	assert.Equal(t, "305", actual)
 }

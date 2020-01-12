@@ -16,9 +16,6 @@ func TestNewDay(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestString(t *testing.T) {
-}
-
 func TestSolvePartOne(t *testing.T) {
 	day := &day{}
 
