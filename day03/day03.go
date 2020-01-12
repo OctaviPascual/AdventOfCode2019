@@ -69,6 +69,32 @@ func NewDay(input string) (*Day, error) {
 	}, nil
 }
 
+// SolvePartOne solves part one
+func (d Day) SolvePartOne() (string, error) {
+	circuit := circuit{
+		ports1: getPortsFromWire(d.wire1),
+		ports2: getPortsFromWire(d.wire2),
+	}
+	distance, err := circuit.findMinimumDistance()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d", distance), nil
+}
+
+// SolvePartTwo solves part two
+func (d Day) SolvePartTwo() (string, error) {
+	circuit := circuit{
+		ports1: getPortsFromWire(d.wire1),
+		ports2: getPortsFromWire(d.wire2),
+	}
+	signalDelay, err := circuit.findMinimumSignalDelay()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d", signalDelay), nil
+}
+
 func parseWire(wireString string) (wire, error) {
 	segmentsString := strings.Split(wireString, ",")
 	wire := make(wire, 0, len(segmentsString))
@@ -103,32 +129,6 @@ func parseSegment(segmentString string) (segment, error) {
 		direction: direction,
 		length:    length,
 	}, nil
-}
-
-// SolvePartOne solves part one
-func (d Day) SolvePartOne() (string, error) {
-	circuit := circuit{
-		ports1: getPortsFromWire(d.wire1),
-		ports2: getPortsFromWire(d.wire2),
-	}
-	distance, err := circuit.findMinimumDistance()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%d", distance), nil
-}
-
-// SolvePartTwo solves part two
-func (d Day) SolvePartTwo() (string, error) {
-	circuit := circuit{
-		ports1: getPortsFromWire(d.wire1),
-		ports2: getPortsFromWire(d.wire2),
-	}
-	signalDelay, err := circuit.findMinimumSignalDelay()
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%d", signalDelay), nil
 }
 
 func getPortsFromWire(wire wire) map[port]int {
