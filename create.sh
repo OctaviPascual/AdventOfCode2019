@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
-set -o pipefail
+set -euxo pipefail
 
 function _help() {
     echo "\
