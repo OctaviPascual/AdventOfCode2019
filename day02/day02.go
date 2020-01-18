@@ -3,50 +3,34 @@ package day02
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
+
+	"github.com/OctaviPascual/AdventOfCode2019/intcode"
 )
 
 const (
-	outputPosition = 0
-	nounPosition   = 1
-	verbPosition   = 2
-
-	desiredIntcodeOutput = intcodeOutput(19690720)
+	desiredIntcodeOutput = intcode.Output(19690720)
 )
-
-type intcodeOutput int
-
-type intcodeProgram struct {
-	memory []int
-}
 
 // Day holds the data needed to solve part one and part two
 type Day struct {
-	initialState   []int
-	intcodeProgram intcodeProgram
+	program string
 }
 
 // NewDay returns a new Day that solves part one and two for the given input
 func NewDay(input string) (*Day, error) {
-	values := strings.Split(input, ",")
-
-	initialState, err := parseInitialState(values)
-	if err != nil {
-		return nil, fmt.Errorf("invalid values %s: %w", values, err)
-	}
-
 	return &Day{
-		initialState: initialState,
-		intcodeProgram: intcodeProgram{
-			memory: make([]int, len(initialState)),
-		},
+		program: input,
 	}, nil
 }
 
 // SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
-	intcodeOutput, err := d.runIntcodeProgram(12, 2)
+	intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+	if err != nil {
+		return "", err
+	}
+
+	intcodeOutput, err := intcodeProgram.Run(12, 2)
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +43,12 @@ func (d Day) SolvePartTwo() (string, error) {
 	for noun := 0; noun < 100; noun++ {
 		for verb := 0; verb < 100; verb++ {
 
-			intcodeOutput, err := d.runIntcodeProgram(noun, verb)
+			intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+			if err != nil {
+				return "", err
+			}
+
+			intcodeOutput, err := intcodeProgram.Run(noun, verb)
 			if err != nil {
 				return "", err
 			}
@@ -71,57 +60,4 @@ func (d Day) SolvePartTwo() (string, error) {
 	}
 
 	return "", errors.New("could not find combination to produce desired output")
-}
-
-func parseInitialState(values []string) ([]int, error) {
-	initialState := make([]int, 0, len(values))
-
-	for _, valueString := range values {
-
-		val, err := strconv.Atoi(valueString)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value %s: %w", valueString, err)
-		}
-
-		initialState = append(initialState, val)
-	}
-
-	return initialState, nil
-}
-
-func (i intcodeProgram) run() error {
-	instructionPointer := 0
-	for {
-		instruction := i.memory[instructionPointer]
-		if instruction == 1 {
-			address1 := i.memory[instructionPointer+1]
-			address2 := i.memory[instructionPointer+2]
-			address3 := i.memory[instructionPointer+3]
-			i.memory[address3] = i.memory[address1] + i.memory[address2]
-			instructionPointer += 4
-		} else if instruction == 2 {
-			address1 := i.memory[instructionPointer+1]
-			address2 := i.memory[instructionPointer+2]
-			address3 := i.memory[instructionPointer+3]
-			i.memory[address3] = i.memory[address1] * i.memory[address2]
-			instructionPointer += 4
-		} else if instruction == 99 {
-			return nil
-		} else {
-			return fmt.Errorf("found unknown instruction %d", instruction)
-		}
-	}
-}
-
-func (d Day) runIntcodeProgram(noun, verb int) (intcodeOutput, error) {
-	copy(d.intcodeProgram.memory, d.initialState)
-	d.intcodeProgram.memory[nounPosition] = noun
-	d.intcodeProgram.memory[verbPosition] = verb
-
-	err := d.intcodeProgram.run()
-	if err != nil {
-		return intcodeOutput(0), fmt.Errorf("error running intcode program: %w", err)
-	}
-
-	return intcodeOutput(d.intcodeProgram.memory[outputPosition]), nil
 }
