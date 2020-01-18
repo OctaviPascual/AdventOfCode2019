@@ -1,17 +1,34 @@
 #!/usr/bin/env bash
 
-set -euxo pipefail
+set -euo pipefail
 
 function _help() {
     echo "\
-start: tool to create new day
-Usage: ./create.sh [DAY]
+Tool to bootstrap a new day
+Usage: ./bootstrap.sh DAY
+Note that AOC_SESSION_COOKIE environment variable must be set to download the input
 "
 }
 
-DAY="${1}"
+DAY="${1:-}"
+
+if ! [[ $DAY =~ ^[1-9][0-9]*$ ]] ; then
+    _help
+    echo "error: DAY must be a number"
+    exit 1
+fi
+
+if ! ((${DAY} >= 1 && ${DAY} <= 25)); then
+    _help
+    echo "error: DAY must be between 1 and 25"
+    exit 1
+fi
+
+set -x
+
 PUZZLE_URL="https://adventofcode.com/2019/day/${DAY}/input"
 
+# Append a 0 at the beginning of the day if it's less than 10
 if (( ${DAY} < 10 )); then
     DAY=0${DAY}
 fi
