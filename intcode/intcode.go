@@ -95,22 +95,52 @@ func (p *Program) run() error {
 		instruction := parseIntruction(p.memory[instructionPointer])
 		switch instruction.opcode {
 		case AddInstruction:
-			address1 := p.memory[instructionPointer+1]
-			address2 := p.memory[instructionPointer+2]
+			var firstParameter int
+			if instruction.firstParameterMode == positionMode {
+				address1 := p.memory[instructionPointer+1]
+				firstParameter = p.memory[address1]
+			} else {
+				firstParameter = p.memory[instructionPointer+1]
+			}
+
+			var secondParameter int
+			if instruction.firstParameterMode == positionMode {
+				address2 := p.memory[instructionPointer+2]
+				secondParameter = p.memory[address2]
+			} else {
+				secondParameter = p.memory[instructionPointer+2]
+			}
+
 			address3 := p.memory[instructionPointer+3]
-			p.memory[address3] = p.memory[address1] + p.memory[address2]
+			p.memory[address3] = firstParameter + secondParameter
 			instructionPointer += 4
 		case MultiplyInstruction:
-			address1 := p.memory[instructionPointer+1]
-			address2 := p.memory[instructionPointer+2]
+			var firstParameter int
+			if instruction.firstParameterMode == positionMode {
+				address1 := p.memory[instructionPointer+1]
+				firstParameter = p.memory[address1]
+			} else {
+				firstParameter = p.memory[instructionPointer+1]
+			}
+
+			var secondParameter int
+			if instruction.firstParameterMode == positionMode {
+				address2 := p.memory[instructionPointer+2]
+				secondParameter = p.memory[address2]
+			} else {
+				secondParameter = p.memory[instructionPointer+2]
+			}
+
 			address3 := p.memory[instructionPointer+3]
-			p.memory[address3] = p.memory[address1] * p.memory[address2]
+			p.memory[address3] = firstParameter * secondParameter
 			instructionPointer += 4
 		case InputInstruction:
-			p.memory[instructionPointer+1] = p.input
+			address := p.memory[instructionPointer+1]
+			p.memory[address] = p.input
 			instructionPointer += 2
 		case OutputInstruction:
-			p.outputBuffer = append(p.outputBuffer, p.memory[instructionPointer+1])
+			address := p.memory[instructionPointer+1]
+			p.outputBuffer = append(p.outputBuffer, p.memory[address])
 			instructionPointer += 2
 		case HaltInstruction:
 			return nil
