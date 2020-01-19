@@ -23,6 +23,23 @@ type Program struct {
 // Output is the output of an Intcode program
 type Output int
 
+type opcode uint8
+
+const (
+	AddInstruction      opcode = 1
+	MultiplyInstruction opcode = 2
+	InputInstruction    opcode = 3
+	OutputInstruction   opcode = 4
+	HaltInstruction     opcode = 99
+)
+
+type instruction struct {
+	opcode              opcode
+	firstParameterMode  parameterMode
+	secondParameterMode parameterMode
+	thirdParameterMode  parameterMode
+}
+
 type parameterMode int
 
 const (
@@ -75,29 +92,39 @@ func (p *Program) Run(noun, verb int) (Output, error) {
 func (p *Program) run() error {
 	instructionPointer := 0
 	for {
-		instruction := p.memory[instructionPointer]
-		if instruction == 1 {
+		instruction := parseIntruction(p.memory[instructionPointer])
+		switch instruction.opcode {
+		case AddInstruction:
 			address1 := p.memory[instructionPointer+1]
 			address2 := p.memory[instructionPointer+2]
 			address3 := p.memory[instructionPointer+3]
 			p.memory[address3] = p.memory[address1] + p.memory[address2]
 			instructionPointer += 4
-		} else if instruction == 2 {
+		case MultiplyInstruction:
 			address1 := p.memory[instructionPointer+1]
 			address2 := p.memory[instructionPointer+2]
 			address3 := p.memory[instructionPointer+3]
 			p.memory[address3] = p.memory[address1] * p.memory[address2]
 			instructionPointer += 4
-		} else if instruction == 3 {
+		case InputInstruction:
 			p.memory[instructionPointer+1] = p.input
 			instructionPointer += 2
-		} else if instruction == 4 {
+		case OutputInstruction:
 			p.outputBuffer = append(p.outputBuffer, p.memory[instructionPointer+1])
 			instructionPointer += 2
-		} else if instruction == 99 {
+		case HaltInstruction:
 			return nil
-		} else {
-			return fmt.Errorf("found unknown instruction %d", instruction)
+		default:
+			return fmt.Errorf("found unknown instruction opcode %d", instruction.opcode)
 		}
+	}
+}
+
+func parseIntruction(n int) instruction {
+	return instruction{
+		opcode:              opcode(n % 100),
+		firstParameterMode:  parameterMode((n / 100) % 10),
+		secondParameterMode: parameterMode((n / 1000) % 10),
+		thirdParameterMode:  parameterMode((n / 10000) % 10),
 	}
 }
