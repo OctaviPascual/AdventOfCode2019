@@ -15,7 +15,7 @@ const (
 // Program represents an Intcode program
 type Program struct {
 	input        int
-	outputBuffer []int
+	outputBuffer []Output
 
 	memory []int
 }
@@ -26,11 +26,15 @@ type Output int
 type opcode uint8
 
 const (
-	AddInstruction      opcode = 1
-	MultiplyInstruction opcode = 2
-	InputInstruction    opcode = 3
-	OutputInstruction   opcode = 4
-	HaltInstruction     opcode = 99
+	AddInstruction         opcode = 1
+	MultiplyInstruction    opcode = 2
+	InputInstruction       opcode = 3
+	OutputInstruction      opcode = 4
+	JumpIfTrueInstruction  opcode = 5
+	JumpIfFalseInstruction opcode = 6
+	LessThanInstruction    opcode = 7
+	EqualsInstruction      opcode = 8
+	HaltInstruction        opcode = 99
 )
 
 type instruction struct {
@@ -77,7 +81,7 @@ func parse(program string) ([]int, error) {
 }
 
 // Run runs an Intcode program with the given noun and verb
-func (p *Program) Run(noun, verb int) (Output, error) {
+func (p *Program) RunWithNounAndVerb(noun, verb int) (Output, error) {
 	p.memory[nounPosition] = noun
 	p.memory[verbPosition] = verb
 
@@ -87,6 +91,18 @@ func (p *Program) Run(noun, verb int) (Output, error) {
 	}
 
 	return Output(p.memory[outputPosition]), nil
+}
+
+// Run runs an Intcode program
+func (p *Program) RunWithInput(input int) ([]Output, error) {
+	p.input = input
+
+	err := p.run()
+	if err != nil {
+		return nil, fmt.Errorf("error running intcode program: %w", err)
+	}
+
+	return p.outputBuffer, nil
 }
 
 func (p *Program) run() error {
@@ -104,7 +120,7 @@ func (p *Program) run() error {
 			}
 
 			var secondParameter int
-			if instruction.firstParameterMode == positionMode {
+			if instruction.secondParameterMode == positionMode {
 				address2 := p.memory[instructionPointer+2]
 				secondParameter = p.memory[address2]
 			} else {
@@ -124,7 +140,7 @@ func (p *Program) run() error {
 			}
 
 			var secondParameter int
-			if instruction.firstParameterMode == positionMode {
+			if instruction.secondParameterMode == positionMode {
 				address2 := p.memory[instructionPointer+2]
 				secondParameter = p.memory[address2]
 			} else {
@@ -139,9 +155,107 @@ func (p *Program) run() error {
 			p.memory[address] = p.input
 			instructionPointer += 2
 		case OutputInstruction:
-			address := p.memory[instructionPointer+1]
-			p.outputBuffer = append(p.outputBuffer, p.memory[address])
+			var firstParameter int
+			if instruction.firstParameterMode == positionMode {
+				address := p.memory[instructionPointer+1]
+				firstParameter = p.memory[address]
+			} else {
+				firstParameter = p.memory[instructionPointer+1]
+			}
+			p.outputBuffer = append(p.outputBuffer, Output(firstParameter))
 			instructionPointer += 2
+		case JumpIfTrueInstruction:
+			var firstParameter int
+			if instruction.firstParameterMode == positionMode {
+				address := p.memory[instructionPointer+1]
+				firstParameter = p.memory[address]
+			} else {
+				firstParameter = p.memory[instructionPointer+1]
+			}
+
+			if firstParameter != 0 {
+				var secondParameter int
+				if instruction.secondParameterMode == positionMode {
+					address := p.memory[instructionPointer+2]
+					secondParameter = p.memory[address]
+				} else {
+					secondParameter = p.memory[instructionPointer+2]
+				}
+				instructionPointer = secondParameter
+			} else {
+				instructionPointer += 3
+			}
+		case JumpIfFalseInstruction:
+			var firstParameter int
+			if instruction.firstParameterMode == positionMode {
+				address := p.memory[instructionPointer+1]
+				firstParameter = p.memory[address]
+			} else {
+				firstParameter = p.memory[instructionPointer+1]
+			}
+
+			if firstParameter == 0 {
+				var secondParameter int
+				if instruction.secondParameterMode == positionMode {
+					address := p.memory[instructionPointer+2]
+					secondParameter = p.memory[address]
+				} else {
+					secondParameter = p.memory[instructionPointer+2]
+				}
+				instructionPointer = secondParameter
+			} else {
+				instructionPointer += 3
+			}
+		case LessThanInstruction:
+			var firstParameter int
+			if instruction.firstParameterMode == positionMode {
+				address := p.memory[instructionPointer+1]
+				firstParameter = p.memory[address]
+			} else {
+				firstParameter = p.memory[instructionPointer+1]
+			}
+
+			var secondParameter int
+			if instruction.secondParameterMode == positionMode {
+				address := p.memory[instructionPointer+2]
+				secondParameter = p.memory[address]
+			} else {
+				secondParameter = p.memory[instructionPointer+2]
+			}
+
+			address := p.memory[instructionPointer+3]
+			if firstParameter < secondParameter {
+				p.memory[address] = 1
+			} else {
+				p.memory[address] = 0
+			}
+
+			instructionPointer += 4
+		case EqualsInstruction:
+			var firstParameter int
+			if instruction.firstParameterMode == positionMode {
+				address := p.memory[instructionPointer+1]
+				firstParameter = p.memory[address]
+			} else {
+				firstParameter = p.memory[instructionPointer+1]
+			}
+
+			var secondParameter int
+			if instruction.secondParameterMode == positionMode {
+				address := p.memory[instructionPointer+2]
+				secondParameter = p.memory[address]
+			} else {
+				secondParameter = p.memory[instructionPointer+2]
+			}
+
+			address := p.memory[instructionPointer+3]
+			if firstParameter == secondParameter {
+				p.memory[address] = 1
+			} else {
+				p.memory[address] = 0
+			}
+
+			instructionPointer += 4
 		case HaltInstruction:
 			return nil
 		default:

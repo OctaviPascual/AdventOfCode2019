@@ -1,4 +1,4 @@
-package day02
+package day05
 
 import (
 	"errors"
@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	desiredIntcodeOutput = intcode.Output(19690720)
+	airConditionerUnitID        = 1
+	thermalRadiatorControllerID = 5
 )
 
 // Day holds the data needed to solve part one and part two
@@ -30,34 +31,31 @@ func (d Day) SolvePartOne() (string, error) {
 		return "", err
 	}
 
-	intcodeOutput, err := intcodeProgram.RunWithNounAndVerb(12, 2)
+	outputs, err := intcodeProgram.RunWithInput(airConditionerUnitID)
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%d", intcodeOutput), nil
+	for i, output := range outputs {
+		if i < len(outputs)-1 && output != intcode.Output(0) {
+			return "", errors.New("all outputs but last should be equal to 0")
+		}
+	}
+
+	return fmt.Sprintf("%d", outputs[len(outputs)-1]), nil
 }
 
 // SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
-	for noun := 0; noun < 100; noun++ {
-		for verb := 0; verb < 100; verb++ {
-
-			intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
-			if err != nil {
-				return "", err
-			}
-
-			intcodeOutput, err := intcodeProgram.RunWithNounAndVerb(noun, verb)
-			if err != nil {
-				return "", err
-			}
-
-			if intcodeOutput == desiredIntcodeOutput {
-				return fmt.Sprintf("%d", 100*noun+verb), nil
-			}
-		}
+	intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+	if err != nil {
+		return "", err
 	}
 
-	return "", errors.New("could not find combination to produce desired output")
+	outputs, err := intcodeProgram.RunWithInput(thermalRadiatorControllerID)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", outputs[len(outputs)-1]), nil
 }
