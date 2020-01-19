@@ -14,11 +14,21 @@ const (
 
 // Program represents an Intcode program
 type Program struct {
+	input        int
+	outputBuffer []int
+
 	memory []int
 }
 
 // Output is the output of an Intcode program
 type Output int
+
+type parameterMode int
+
+const (
+	positionMode  parameterMode = 0
+	immediateMode parameterMode = 1
+)
 
 // NewIntcodeProgram creates a new Intcode Program
 func NewIntcodeProgram(program string) (*Program, error) {
@@ -78,6 +88,12 @@ func (p *Program) run() error {
 			address3 := p.memory[instructionPointer+3]
 			p.memory[address3] = p.memory[address1] * p.memory[address2]
 			instructionPointer += 4
+		} else if instruction == 3 {
+			p.memory[instructionPointer+1] = p.input
+			instructionPointer += 2
+		} else if instruction == 4 {
+			p.outputBuffer = append(p.outputBuffer, p.memory[instructionPointer+1])
+			instructionPointer += 2
 		} else if instruction == 99 {
 			return nil
 		} else {
