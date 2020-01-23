@@ -26,15 +26,15 @@ type Output int
 type opcode uint8
 
 const (
-	AddInstruction         opcode = 1
-	MultiplyInstruction    opcode = 2
-	InputInstruction       opcode = 3
-	OutputInstruction      opcode = 4
-	JumpIfTrueInstruction  opcode = 5
-	JumpIfFalseInstruction opcode = 6
-	LessThanInstruction    opcode = 7
-	EqualsInstruction      opcode = 8
-	HaltInstruction        opcode = 99
+	addInstruction         opcode = 1
+	multiplyInstruction    opcode = 2
+	inputInstruction       opcode = 3
+	outputInstruction      opcode = 4
+	jumpIfTrueInstruction  opcode = 5
+	jumpIfFalseInstruction opcode = 6
+	lessThanInstruction    opcode = 7
+	equalsInstruction      opcode = 8
+	haltInstruction        opcode = 99
 )
 
 type instruction struct {
@@ -110,7 +110,7 @@ func (p *Program) run() error {
 	for {
 		instruction := parseIntruction(p.memory[instructionPointer])
 		switch instruction.opcode {
-		case AddInstruction:
+		case addInstruction:
 			var firstParameter int
 			if instruction.firstParameterMode == positionMode {
 				address1 := p.memory[instructionPointer+1]
@@ -130,7 +130,7 @@ func (p *Program) run() error {
 			address3 := p.memory[instructionPointer+3]
 			p.memory[address3] = firstParameter + secondParameter
 			instructionPointer += 4
-		case MultiplyInstruction:
+		case multiplyInstruction:
 			var firstParameter int
 			if instruction.firstParameterMode == positionMode {
 				address1 := p.memory[instructionPointer+1]
@@ -150,11 +150,11 @@ func (p *Program) run() error {
 			address3 := p.memory[instructionPointer+3]
 			p.memory[address3] = firstParameter * secondParameter
 			instructionPointer += 4
-		case InputInstruction:
+		case inputInstruction:
 			address := p.memory[instructionPointer+1]
 			p.memory[address] = p.input
 			instructionPointer += 2
-		case OutputInstruction:
+		case outputInstruction:
 			var firstParameter int
 			if instruction.firstParameterMode == positionMode {
 				address := p.memory[instructionPointer+1]
@@ -164,7 +164,7 @@ func (p *Program) run() error {
 			}
 			p.outputBuffer = append(p.outputBuffer, Output(firstParameter))
 			instructionPointer += 2
-		case JumpIfTrueInstruction:
+		case jumpIfTrueInstruction:
 			var firstParameter int
 			if instruction.firstParameterMode == positionMode {
 				address := p.memory[instructionPointer+1]
@@ -185,7 +185,7 @@ func (p *Program) run() error {
 			} else {
 				instructionPointer += 3
 			}
-		case JumpIfFalseInstruction:
+		case jumpIfFalseInstruction:
 			var firstParameter int
 			if instruction.firstParameterMode == positionMode {
 				address := p.memory[instructionPointer+1]
@@ -206,7 +206,7 @@ func (p *Program) run() error {
 			} else {
 				instructionPointer += 3
 			}
-		case LessThanInstruction:
+		case lessThanInstruction:
 			var firstParameter int
 			if instruction.firstParameterMode == positionMode {
 				address := p.memory[instructionPointer+1]
@@ -231,7 +231,7 @@ func (p *Program) run() error {
 			}
 
 			instructionPointer += 4
-		case EqualsInstruction:
+		case equalsInstruction:
 			var firstParameter int
 			if instruction.firstParameterMode == positionMode {
 				address := p.memory[instructionPointer+1]
@@ -256,7 +256,7 @@ func (p *Program) run() error {
 			}
 
 			instructionPointer += 4
-		case HaltInstruction:
+		case haltInstruction:
 			return nil
 		default:
 			return fmt.Errorf("found unknown instruction opcode %d", instruction.opcode)
