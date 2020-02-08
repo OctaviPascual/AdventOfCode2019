@@ -64,6 +64,9 @@ func (d Day) SolvePartTwo() (string, error) {
 	}
 
 	minimumOrbitalTransfers, err := getMinimumOrbitalTransfers(galaxy)
+	if err != nil {
+		return "", fmt.Errorf("could not compute minimum orbital transfers: %w", err)
+	}
 	return fmt.Sprintf("%d", minimumOrbitalTransfers), nil
 }
 
