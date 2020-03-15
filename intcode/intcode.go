@@ -51,19 +51,17 @@ func (i *Intcode) RunWithNounAndVerb(noun, verb int) (int, error) {
 	return output, err
 }
 
-// RunWithInput runs an Intcode program with the given input
-func (i *Intcode) RunWithInput(input ...int) ([]int, error) {
-	i.program.SetInput(input)
+// Run runs an Intcode program with the given input and output channels
+func (i *Intcode) Run(inputChannel <-chan int, outputChannel chan<- int) error {
+	i.program.SetChannels(inputChannel, outputChannel)
 
 	err := run(i.program)
+	close(outputChannel)
 	if err != nil {
-		return nil, fmt.Errorf("runtime error: %w", err)
+		return fmt.Errorf("runtime error: %w", err)
 	}
 
-	var outputs []int
-	outputs = append(outputs, i.program.GetOutput()...)
-
-	return outputs, nil
+	return nil
 }
 
 func run(program *program.Program) error {

@@ -72,12 +72,16 @@ func thrusterSignal(amplifiers []amplifier, program string) (int, error) {
 			return 0, err
 		}
 
-		input := []int{amplifier.firstInput, amplifier.secondInput}
-		output, err := intcodeProgram.RunWithInput(input...)
+		inputChannel := make(chan int, 2)
+		inputChannel <- amplifier.firstInput
+		inputChannel <- amplifier.secondInput
+		outputChannel := make(chan int, 1)
+
+		err = intcodeProgram.Run(inputChannel, outputChannel)
 		if err != nil {
 			return 0, err
 		}
-		secondInput = output[0]
+		secondInput = <-outputChannel
 	}
 	return secondInput, nil
 }

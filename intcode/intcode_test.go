@@ -139,10 +139,13 @@ func TestRunWithInput(t *testing.T) {
 			program, err := NewIntcodeProgram(testCase.program)
 			require.NoError(t, err)
 
-			outputs, err := program.RunWithInput(testCase.input)
+			inputChannel := make(chan int, 1)
+			inputChannel <- testCase.input
+			outputChannel := make(chan int, 1)
+			err = program.Run(inputChannel, outputChannel)
 			require.NoError(t, err)
 
-			assert.Equal(t, testCase.expected, outputs[0])
+			assert.Equal(t, testCase.expected, <-outputChannel)
 		})
 	}
 }

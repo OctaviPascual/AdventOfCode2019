@@ -1,7 +1,6 @@
 package program
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -14,8 +13,8 @@ type Program struct {
 	// Halted indicates if the current program has been halted
 	Halted bool
 
-	inputBuffer  []int
-	outputBuffer []int
+	inputChannel  <-chan int
+	outputChannel chan<- int
 
 	memory []int
 }
@@ -66,27 +65,18 @@ func (p *Program) Store(position int, value int) error {
 	return nil
 }
 
-// ReadInput reads the input value of the program
-func (p *Program) ReadInput() (int, error) {
-	if len(p.inputBuffer) == 0 {
-		return 0, errors.New("no input in input buffer")
-	}
-	input := p.inputBuffer[0]
-	p.inputBuffer = p.inputBuffer[1:]
-	return input, nil
+// SetChannels sets the input and output channels of the program to the provided ones
+func (p *Program) SetChannels(input <-chan int, output chan<- int) {
+	p.inputChannel = input
+	p.outputChannel = output
 }
 
-// SetInput sets the input of the program to the provided one
-func (p *Program) SetInput(input []int) {
-	p.inputBuffer = input
-}
-
-// GetOutput gets the output of the program
-func (p *Program) GetOutput() []int {
-	return p.outputBuffer
+// ReadInput reads an input value of the program from the input channel
+func (p *Program) ReadInput() int {
+	return <-p.inputChannel
 }
 
 // WriteOutput writes the output value to the program
 func (p *Program) WriteOutput(output int) {
-	p.outputBuffer = append(p.outputBuffer, output)
+	p.outputChannel <- output
 }

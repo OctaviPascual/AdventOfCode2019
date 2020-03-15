@@ -31,9 +31,18 @@ func (d Day) SolvePartOne() (string, error) {
 		return "", err
 	}
 
-	outputs, err := intcodeProgram.RunWithInput(airConditionerUnitID)
+	inputChannel := make(chan int, 1)
+	inputChannel <- airConditionerUnitID
+	outputChannel := make(chan int, 1000)
+
+	err = intcodeProgram.Run(inputChannel, outputChannel)
 	if err != nil {
 		return "", err
+	}
+
+	var outputs []int
+	for output := range outputChannel {
+		outputs = append(outputs, output)
 	}
 
 	for i, output := range outputs {
@@ -52,10 +61,14 @@ func (d Day) SolvePartTwo() (string, error) {
 		return "", err
 	}
 
-	outputs, err := intcodeProgram.RunWithInput(thermalRadiatorControllerID)
+	inputChannel := make(chan int, 1)
+	inputChannel <- thermalRadiatorControllerID
+	outputChannel := make(chan int, 1)
+
+	err = intcodeProgram.Run(inputChannel, outputChannel)
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%d", outputs[len(outputs)-1]), nil
+	return fmt.Sprintf("%d", <-outputChannel), nil
 }

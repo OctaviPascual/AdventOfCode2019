@@ -9,10 +9,7 @@ func (input) opcode() opcode {
 }
 
 func (i input) Execute(program *program.Program) error {
-	value, err := program.ReadInput()
-	if err != nil {
-		return err
-	}
+	value := program.ReadInput()
 
 	address, err := program.Fetch(program.InstructionPointer + 1)
 	if err != nil {
