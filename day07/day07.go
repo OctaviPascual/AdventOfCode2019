@@ -4,13 +4,18 @@ import (
 	"fmt"
 
 	"github.com/OctaviPascual/AdventOfCode2019/intcode"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type amplifier struct {
-	id          rune
-	firstInput  int
-	secondInput int
+	id     rune
+	phase  int
+	input  chan int
+	output chan int
 }
+
+type signalFn func(amplifiers []amplifier, program string) (int, error)
 
 // Day holds the data needed to solve part one and part two
 type Day struct {
@@ -26,6 +31,21 @@ func NewDay(input string) (*Day, error) {
 
 // SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
+	phaseSettings := []int{0, 1, 2, 3, 4}
+	signalFn := thrusterSignalInSeries
+	maxThrusterSignal := getMaxThrusterSignal(d.program, phaseSettings, signalFn)
+	return fmt.Sprintf("%d", maxThrusterSignal), nil
+}
+
+// SolvePartTwo solves part two
+func (d Day) SolvePartTwo() (string, error) {
+	phaseSettings := []int{5, 6, 7, 8, 9}
+	signalFn := thrusterSignalWithFeedbackLoop
+	maxThrusterSignal := getMaxThrusterSignal(d.program, phaseSettings, signalFn)
+	return fmt.Sprintf("%d", maxThrusterSignal), nil
+}
+
+func getMaxThrusterSignal(program string, phaseSettings []int, signalFn signalFn) int {
 	amplifiers := []amplifier{
 		{id: 'A'},
 		{id: 'B'},
@@ -33,57 +53,23 @@ func (d Day) SolvePartOne() (string, error) {
 		{id: 'D'},
 		{id: 'E'},
 	}
-	maxThrusterSignal := getMaxThrusterSignal(amplifiers, d.program)
-	return fmt.Sprintf("%d", maxThrusterSignal), nil
-}
+	allCombinations := generateAllPhaseSettingsCombinations(phaseSettings)
 
-// SolvePartTwo solves part two
-func (d Day) SolvePartTwo() (string, error) {
-	return "", nil
-}
-
-func getMaxThrusterSignal(amplifiers []amplifier, program string) int {
-	allCombinations := generateAllPhaseSettingsCombinations([]int{0, 1, 2, 3, 4})
 	maxThrusterSignal := 0
 	for _, combination := range allCombinations {
 
-		amplifiers[0].firstInput = combination[0]
-		amplifiers[1].firstInput = combination[1]
-		amplifiers[2].firstInput = combination[2]
-		amplifiers[3].firstInput = combination[3]
-		amplifiers[4].firstInput = combination[4]
+		amplifiers[0].phase = combination[0]
+		amplifiers[1].phase = combination[1]
+		amplifiers[2].phase = combination[2]
+		amplifiers[3].phase = combination[3]
+		amplifiers[4].phase = combination[4]
 
-		ts, _ := thrusterSignal(amplifiers, program)
+		ts, _ := signalFn(amplifiers, program)
 		if ts > maxThrusterSignal {
 			maxThrusterSignal = ts
 		}
 	}
 	return maxThrusterSignal
-}
-
-func thrusterSignal(amplifiers []amplifier, program string) (int, error) {
-	secondInput := 0
-	for _, amplifier := range amplifiers {
-
-		amplifier.secondInput = secondInput
-
-		intcodeProgram, err := intcode.NewIntcodeProgram(program)
-		if err != nil {
-			return 0, err
-		}
-
-		inputChannel := make(chan int, 2)
-		inputChannel <- amplifier.firstInput
-		inputChannel <- amplifier.secondInput
-		outputChannel := make(chan int, 1)
-
-		err = intcodeProgram.Run(inputChannel, outputChannel)
-		if err != nil {
-			return 0, err
-		}
-		secondInput = <-outputChannel
-	}
-	return secondInput, nil
 }
 
 func generateAllPhaseSettingsCombinations(phaseSettings []int) [][]int {
@@ -106,5 +92,85 @@ func permute(phaseSettings []int, phaseSettingsCombinations *[][]int, i int) {
 		phaseSettings[i], phaseSettings[j] = phaseSettings[j], phaseSettings[i]
 		permute(phaseSettings, phaseSettingsCombinations, i+1)
 		phaseSettings[i], phaseSettings[j] = phaseSettings[j], phaseSettings[i]
+	}
+}
+
+func thrusterSignalInSeries(amplifiers []amplifier, program string) (int, error) {
+	wireInSeries(amplifiers)
+
+	firstSignal := 0
+	amplifiers[0].input <- firstSignal
+
+	for _, amplifier := range amplifiers {
+		intcodeProgram, err := intcode.NewIntcodeProgram(program)
+		if err != nil {
+			return 0, err
+		}
+
+		err = intcodeProgram.Run(amplifier.input, amplifier.output)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	outputSignal := <-amplifiers[len(amplifiers)-1].output
+	return outputSignal, nil
+}
+
+func wireInSeries(amplifiers []amplifier) {
+	for i := range amplifiers {
+		amplifiers[i].input = make(chan int, 2)
+		amplifiers[i].input <- amplifiers[i].phase
+	}
+
+	for i := range amplifiers {
+		if i < len(amplifiers)-1 {
+			amplifiers[i].output = amplifiers[i+1].input
+		} else {
+			amplifiers[i].output = make(chan int, 1)
+		}
+	}
+}
+
+func thrusterSignalWithFeedbackLoop(amplifiers []amplifier, program string) (int, error) {
+	wireWithFeedbackLoop(amplifiers)
+
+	firstSignal := 0
+	amplifiers[0].input <- firstSignal
+
+	var group errgroup.Group
+	for _, amplifier := range amplifiers {
+		intcodeProgram, err := intcode.NewIntcodeProgram(program)
+		if err != nil {
+			return 0, err
+		}
+
+		// create local variable for closure below
+		amplifier := amplifier
+		group.Go(func() error {
+			return intcodeProgram.Run(amplifier.input, amplifier.output)
+		})
+	}
+	err := group.Wait()
+	if err != nil {
+		return 0, err
+	}
+
+	outputSignal := <-amplifiers[len(amplifiers)-1].output
+	return outputSignal, nil
+}
+
+func wireWithFeedbackLoop(amplifiers []amplifier) {
+	for i := range amplifiers {
+		amplifiers[i].input = make(chan int, 2)
+		amplifiers[i].input <- amplifiers[i].phase
+	}
+
+	for i := range amplifiers {
+		if i < len(amplifiers)-1 {
+			amplifiers[i].output = amplifiers[i+1].input
+		} else {
+			amplifiers[i].output = amplifiers[0].input
+		}
 	}
 }
