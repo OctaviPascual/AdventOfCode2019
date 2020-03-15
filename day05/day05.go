@@ -37,7 +37,7 @@ func (d Day) SolvePartOne() (string, error) {
 	}
 
 	for i, output := range outputs {
-		if i < len(outputs)-1 && output != intcode.Output(0) {
+		if i < len(outputs)-1 && output != 0 {
 			return "", errors.New("all outputs but last should be equal to 0")
 		}
 	}

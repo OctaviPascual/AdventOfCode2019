@@ -18,9 +18,6 @@ type Intcode struct {
 	program *program.Program
 }
 
-// Output is the output of an Intcode program
-type Output int
-
 // NewIntcodeProgram creates a new Intcode Program
 func NewIntcodeProgram(programString string) (*Intcode, error) {
 	p, err := program.NewProgram(programString)
@@ -34,39 +31,38 @@ func NewIntcodeProgram(programString string) (*Intcode, error) {
 }
 
 // RunWithNounAndVerb runs an Intcode program with the given noun and verb
-func (i *Intcode) RunWithNounAndVerb(noun, verb int) (Output, error) {
+func (i *Intcode) RunWithNounAndVerb(noun, verb int) (int, error) {
 	err := i.program.Store(nounPosition, noun)
 	if err != nil {
-		return Output(0), fmt.Errorf("error setting noun: %w", err)
+		return 0, fmt.Errorf("error setting noun: %w", err)
 	}
 
 	err = i.program.Store(verbPosition, verb)
 	if err != nil {
-		return Output(0), fmt.Errorf("error setting verb: %w", err)
+		return 0, fmt.Errorf("error setting verb: %w", err)
 	}
 
 	err = run(i.program)
 	if err != nil {
-		return Output(0), fmt.Errorf("runtime error: %w", err)
+		return 0, fmt.Errorf("runtime error: %w", err)
 	}
 
 	output, err := i.program.Fetch(outputPosition)
-	return Output(output), err
+	return output, err
 }
 
 // RunWithInput runs an Intcode program with the given input
-func (i *Intcode) RunWithInput(input int) ([]Output, error) {
-	i.program.SetInput([]int{input})
+func (i *Intcode) RunWithInput(input ...int) ([]int, error) {
+	i.program.SetInput(input)
 
 	err := run(i.program)
 	if err != nil {
 		return nil, fmt.Errorf("runtime error: %w", err)
 	}
 
-	var outputs []Output
-	for _, output := range i.program.GetOutput() {
-		outputs = append(outputs, Output(output))
-	}
+	var outputs []int
+	outputs = append(outputs, i.program.GetOutput()...)
+
 	return outputs, nil
 }
 

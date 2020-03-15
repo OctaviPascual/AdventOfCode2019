@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	desiredIntcodeOutput = intcode.Output(19690720)
+	desiredIntcodeOutput = 19690720
 )
 
 // Day holds the data needed to solve part one and part two
