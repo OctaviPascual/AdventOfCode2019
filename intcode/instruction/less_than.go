@@ -9,6 +9,7 @@ import (
 type lessThan struct {
 	firstParameterMode  parameterMode
 	secondParameterMode parameterMode
+	thirdParameterMode  parameterMode
 }
 
 func (lessThan) opcode() opcode {
@@ -26,19 +27,14 @@ func (lt lessThan) Execute(program *program.Program) error {
 		return fmt.Errorf("could not get second parameter: %w", err)
 	}
 
-	address, err := program.Fetch(program.InstructionPointer + 3)
-	if err != nil {
-		return fmt.Errorf("could not get third parameter: %w", err)
-	}
-
 	value := 0
 	if firstParameter < secondParameter {
 		value = 1
 	}
 
-	err = program.Store(address, value)
+	err = storeWithThirdParameter(value, lt.thirdParameterMode, program)
 	if err != nil {
-		return nil
+		return fmt.Errorf("could not store with third parameter: %w", err)
 	}
 
 	program.InstructionPointer += 4

@@ -9,6 +9,7 @@ import (
 type add struct {
 	firstParameterMode  parameterMode
 	secondParameterMode parameterMode
+	thirdParameterMode  parameterMode
 }
 
 func (add) opcode() opcode {
@@ -26,14 +27,9 @@ func (a add) Execute(program *program.Program) error {
 		return fmt.Errorf("could not get second parameter: %w", err)
 	}
 
-	address, err := program.Fetch(program.InstructionPointer + 3)
+	err = storeWithThirdParameter(firstParameter+secondParameter, a.thirdParameterMode, program)
 	if err != nil {
-		return fmt.Errorf("could not get third parameter: %w", err)
-	}
-
-	err = program.Store(address, firstParameter+secondParameter)
-	if err != nil {
-		return err
+		return fmt.Errorf("could not store with third parameter: %w", err)
 	}
 
 	program.InstructionPointer += 4

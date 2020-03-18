@@ -12,16 +12,18 @@ type Program struct {
 	InstructionPointer int
 	// Halted indicates if the current program has been halted
 	Halted bool
+	// RelativeBase is the current position of the relative base
+	RelativeBase int
 
 	inputChannel  <-chan int
 	outputChannel chan<- int
 
-	memory []int
+	memory map[int]int
 }
 
 // NewProgram creates a new program from the program string
 func NewProgram(programString string) (*Program, error) {
-	memory, err := parse(programString)
+	memory, err := parseProgram(programString)
 	if err != nil {
 		return nil, err
 	}
@@ -31,26 +33,26 @@ func NewProgram(programString string) (*Program, error) {
 	}, nil
 }
 
-func parse(programString string) ([]int, error) {
-	tokens := strings.Split(programString, ",")
-	values := make([]int, 0, len(tokens))
+func parseProgram(programString string) (map[int]int, error) {
+	memory := make(map[int]int)
 
-	for _, token := range tokens {
+	tokens := strings.Split(programString, ",")
+	for i, token := range tokens {
 
 		value, err := strconv.Atoi(token)
 		if err != nil {
 			return nil, fmt.Errorf("invalid value %s: %w", token, err)
 		}
 
-		values = append(values, value)
+		memory[i] = value
 	}
 
-	return values, nil
+	return memory, nil
 }
 
 // Fetch fetches value at given position
 func (p *Program) Fetch(position int) (int, error) {
-	if position < 0 || position >= len(p.memory) {
+	if position < 0 {
 		return 0, fmt.Errorf("fetch error: invalid memory position: %d", position)
 	}
 	return p.memory[position], nil
@@ -58,7 +60,7 @@ func (p *Program) Fetch(position int) (int, error) {
 
 // Store stores value at given position
 func (p *Program) Store(position int, value int) error {
-	if position < 0 || position >= len(p.memory) {
+	if position < 0 {
 		return fmt.Errorf("store error: invalid memory position: %d", position)
 	}
 	p.memory[position] = value

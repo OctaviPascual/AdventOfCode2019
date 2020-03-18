@@ -132,6 +132,11 @@ func TestRunWithInput(t *testing.T) {
 			input:    7,
 			expected: 999,
 		},
+		"program that outputs the input": {
+			program:  "109,1,3,3,204,2,99",
+			input:    100,
+			expected: 100,
+		},
 	}
 
 	for name, testCase := range testCases {

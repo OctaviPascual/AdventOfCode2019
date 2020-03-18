@@ -1,8 +1,14 @@
 package instruction
 
-import "github.com/OctaviPascual/AdventOfCode2019/intcode/program"
+import (
+	"fmt"
 
-type input struct{}
+	"github.com/OctaviPascual/AdventOfCode2019/intcode/program"
+)
+
+type input struct {
+	firstParameterMode parameterMode
+}
 
 func (input) opcode() opcode {
 	return inputOpcode
@@ -11,14 +17,9 @@ func (input) opcode() opcode {
 func (i input) Execute(program *program.Program) error {
 	value := program.ReadInput()
 
-	address, err := program.Fetch(program.InstructionPointer + 1)
+	err := storeWithFirstParameter(value, i.firstParameterMode, program)
 	if err != nil {
-		return err
-	}
-
-	err = program.Store(address, value)
-	if err != nil {
-		return err
+		return fmt.Errorf("could not store with first parameter: %w", err)
 	}
 
 	program.InstructionPointer += 2
