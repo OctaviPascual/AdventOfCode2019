@@ -16,6 +16,7 @@ import (
 	"github.com/OctaviPascual/AdventOfCode2019/day08"
 	"github.com/OctaviPascual/AdventOfCode2019/day09"
 	"github.com/OctaviPascual/AdventOfCode2019/day10"
+	"github.com/OctaviPascual/AdventOfCode2019/day11"
 )
 
 // Day is the interface that wraps SolvePartOne and SolvePartTwo methods
@@ -86,6 +87,12 @@ var days = []struct {
 		filename: "./day10/day10.txt",
 		constructor: func(input string) (Day, error) {
 			return day10.NewDay(input)
+		},
+	},
+	{
+		filename: "./day11/day11.txt",
+		constructor: func(input string) (Day, error) {
+			return day11.NewDay(input)
 		},
 	},
 }
