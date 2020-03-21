@@ -10,6 +10,7 @@ Note that AOC_SESSION_COOKIE environment variable must be set to download the in
 "
 }
 
+: "$AOC_SESSION_COOKIE"
 DAY="${1:-}"
 
 if ! [[ $DAY =~ ^[1-9][0-9]*$ ]] ; then
