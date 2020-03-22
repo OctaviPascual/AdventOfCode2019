@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/OctaviPascual/AdventOfCode2019/util"
 )
 
 const (
@@ -66,7 +68,7 @@ func (d Day) SolvePartTwo() (string, error) {
 	xCycleLength := findCycleLength(d.moons, xDimension)
 	yCycleLength := findCycleLength(d.moons, yDimension)
 	zCycleLength := findCycleLength(d.moons, zDimension)
-	return fmt.Sprintf("%d", lcm3(xCycleLength, yCycleLength, zCycleLength)), nil
+	return fmt.Sprintf("%d", util.LCM3(xCycleLength, yCycleLength, zCycleLength)), nil
 }
 
 func parseMoons(moonsStrings []string) ([]*moon, error) {
@@ -170,7 +172,7 @@ func (m moon) totalEnergy() int {
 func (m moon) potentialEnergy() int {
 	potentialEnergy := 0
 	for i := 0; i < len(m.position); i++ {
-		potentialEnergy += abs(m.position[i])
+		potentialEnergy += util.Abs(m.position[i])
 	}
 	return potentialEnergy
 }
@@ -178,7 +180,7 @@ func (m moon) potentialEnergy() int {
 func (m moon) kineticEnergy() int {
 	kineticEnergy := 0
 	for i := 0; i < len(m.position); i++ {
-		kineticEnergy += abs(m.velocity[i])
+		kineticEnergy += util.Abs(m.velocity[i])
 	}
 	return kineticEnergy
 }
@@ -211,26 +213,4 @@ func equalPositionsAndVelocities(moons []*moon, dimension int, positions, veloci
 		}
 	}
 	return true
-}
-
-func abs(a int) int {
-	if a < 0 {
-		return -a
-	}
-	return a
-}
-
-func gcd(a, b int) int {
-	if b == 0 {
-		return a
-	}
-	return gcd(b, a%b)
-}
-
-func lcm3(a, b, c int) int {
-	return lcm(lcm(a, b), c)
-}
-
-func lcm(a, b int) int {
-	return (a * b) / gcd(a, b)
 }

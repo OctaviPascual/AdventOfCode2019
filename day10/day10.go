@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+
+	"github.com/OctaviPascual/AdventOfCode2019/util"
 )
 
 const (
@@ -125,7 +127,7 @@ func (ms monitoringStation) hasDirectLineOfSight(p position) bool {
 	dj := p.j - ms.position.j
 
 	var iStep, jStep, steps int
-	gcd := gcd(abs(di), abs(dj))
+	gcd := util.GCD(util.Abs(di), util.Abs(dj))
 	if gcd == 0 {
 		if di == 0 {
 			iStep = 0
@@ -213,25 +215,11 @@ func (ms *monitoringStation) runLaser() []position {
 	return nil
 }
 
-func abs(a int) int {
-	if a < 0 {
-		return -a
-	}
-	return a
-}
-
-func gcd(a, b int) int {
-	if b == 0 {
-		return a
-	}
-	return gcd(b, a%b)
-}
-
 // pseudoAngle returns a number from the range [-2 .. 2] which is monotonic in the angle the vector (di, dj)
 // makes against the x axis
 // https://stackoverflow.com/q/16542042
 func pseudoAngle(di, dj int) *big.Rat {
-	r := big.NewRat(int64(di), int64(abs(di)+abs(dj)))
+	r := big.NewRat(int64(di), int64(util.Abs(di)+util.Abs(dj)))
 	if dj < 0 {
 		return r.Sub(big.NewRat(1, 1), r)
 	}
