@@ -156,12 +156,10 @@ func produce(chemical chemical, quantity int, state state) error {
 
 	updateLeftovers(quantityProduced-quantityNeeded, chemical, state)
 
-	for i := 0; i < reactionsNeeded; i++ {
-		for _, reactant := range reaction.reactants {
-			err := produce(reactant.chemical, reactant.coefficient, state)
-			if err != nil {
-				return err
-			}
+	for _, reactant := range reaction.reactants {
+		err := produce(reactant.chemical, reactant.coefficient*reactionsNeeded, state)
+		if err != nil {
+			return err
 		}
 	}
 
