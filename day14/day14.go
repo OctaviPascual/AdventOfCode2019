@@ -65,18 +65,25 @@ func (d Day) SolvePartOne() (string, error) {
 		leftoverByChemical: make(map[chemical]int),
 	}
 
-	err := produce(fuel, 1, state)
+	rawMaterialRequired, err := getRawMaterialRequired(fuel, 1, state)
 	if err != nil {
-		return "", fmt.Errorf("could not produce 1 FUEL: %w", err)
+		return "", err
 	}
-
-	rawMaterialRequired := getRawMaterialRequired(state)
 	return fmt.Sprintf("%d", rawMaterialRequired), nil
 }
 
 // SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
-	return "", nil
+	state := state{
+		reactionByChemical: createReactionByChemical(d.reactions),
+		leftoverByChemical: make(map[chemical]int),
+	}
+
+	maximumAmountOfFuel, err := getMaximumAmountOfFuel(1e12, state)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d", maximumAmountOfFuel), nil
 }
 
 func parseReactions(reactionsString []string) ([]reaction, error) {
@@ -131,6 +138,15 @@ func parseChemical(match []string) balancedChemical {
 	}
 }
 
+func getRawMaterialRequired(chemical chemical, quantity int, state state) (int, error) {
+	err := produce(chemical, quantity, state)
+	if err != nil {
+		return 0, fmt.Errorf("could not produce %d quantity of chemical %s: %w", quantity, chemical, err)
+	}
+
+	return state.leftoverByChemical[rawMaterial], nil
+}
+
 func createReactionByChemical(reactions []reaction) map[chemical]reaction {
 	reactionByChemical := make(map[chemical]reaction, len(reactions))
 	for _, reaction := range reactions {
@@ -183,6 +199,60 @@ func updateLeftovers(leftovers int, chemical chemical, state state) {
 	state.leftoverByChemical[chemical] += leftovers
 }
 
-func getRawMaterialRequired(state state) int {
-	return state.leftoverByChemical[rawMaterial]
+func getMaximumAmountOfFuel(rawMaterialQuantity int, state state) (int, error) {
+	rawMaterialRequired, err := getRawMaterialRequired(fuel, 1, state)
+	if err != nil {
+		return 0, err
+	}
+
+	// This value is a lower bound: we will always be able to produce this amount of fuel
+	lowAmountOfFuel := rawMaterialQuantity / rawMaterialRequired
+
+	// This value is an upper bound: given that all reaction coefficients are integers
+	// and that fuel coefficient is always 1, we will need at least 1 raw material to produce 1 fuel
+	// Thus, at most we will be able to produce as much fuel as raw material
+	highAmountOfFuel := rawMaterialQuantity
+
+	return searchAmountOfFuel(lowAmountOfFuel, highAmountOfFuel, rawMaterialQuantity, state)
+}
+
+func searchAmountOfFuel(lowAmountOfFuel, highAmountOfFuel, rawMaterialQuantity int, state state) (int, error) {
+	if lowAmountOfFuel >= highAmountOfFuel {
+		return 0, fmt.Errorf("could not find a maximum amount of fuel, review inital low and high bounds")
+	}
+
+	amountOfFuel := (lowAmountOfFuel + highAmountOfFuel) / 2
+
+	canProduceCurrent, err := canProduce(amountOfFuel, rawMaterialQuantity, state)
+	if err != nil {
+		return 0, err
+	}
+
+	canProduceNext, err := canProduce(amountOfFuel+1, rawMaterialQuantity, state)
+	if err != nil {
+		return 0, err
+	}
+
+	// We found the maximum amount of fuel, we know we won't manage to produce more fuel with the
+	// same amount of raw materials
+	if canProduceCurrent && !canProduceNext {
+		return amountOfFuel, nil
+	}
+
+	if canProduceCurrent {
+		return searchAmountOfFuel(amountOfFuel+1, highAmountOfFuel, rawMaterialQuantity, state)
+	}
+
+	return searchAmountOfFuel(lowAmountOfFuel, amountOfFuel, rawMaterialQuantity, state)
+}
+
+func canProduce(fuelQuantity, rawMaterialQuantity int, state state) (bool, error) {
+	state.leftoverByChemical = make(map[chemical]int)
+
+	rawMaterialRequired, err := getRawMaterialRequired(fuel, fuelQuantity, state)
+	if err != nil {
+		return false, err
+	}
+
+	return rawMaterialRequired <= rawMaterialQuantity, nil
 }
