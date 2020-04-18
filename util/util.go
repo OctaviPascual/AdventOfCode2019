@@ -25,3 +25,11 @@ func LCM(a, b int) int {
 func LCM3(a, b, c int) int {
 	return LCM(LCM(a, b), c)
 }
+
+// Max returns the larger of a or b
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
