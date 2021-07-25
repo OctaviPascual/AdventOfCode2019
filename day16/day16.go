@@ -120,9 +120,7 @@ func runFFT(signal signal, phases int) signal {
 func createRealSignal(originalSignal signal) signal {
 	digits := make([]digit, 0, originalSignal.length()*realSignalRepetitions)
 	for i := 0; i < realSignalRepetitions; i++ {
-		for _, d := range originalSignal.digits {
-			digits = append(digits, d)
-		}
+		digits = append(digits, originalSignal.digits...)
 	}
 	return signal{
 		digits: digits,
