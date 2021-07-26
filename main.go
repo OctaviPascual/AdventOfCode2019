@@ -20,6 +20,7 @@ import (
 	"github.com/OctaviPascual/AdventOfCode2019/day12"
 	"github.com/OctaviPascual/AdventOfCode2019/day13"
 	"github.com/OctaviPascual/AdventOfCode2019/day14"
+	"github.com/OctaviPascual/AdventOfCode2019/day15"
 	"github.com/OctaviPascual/AdventOfCode2019/day16"
 )
 
@@ -115,6 +116,12 @@ var days = []struct {
 		filename: "./day14/day14.txt",
 		constructor: func(input string) (Day, error) {
 			return day14.NewDay(input)
+		},
+	},
+	{
+		filename: "./day15/day15.txt",
+		constructor: func(input string) (Day, error) {
+			return day15.NewDay(input)
 		},
 	},
 	{

@@ -106,8 +106,8 @@ func newDigitFromInt(n int) (digit, error) {
 	return digit(n), nil
 }
 
-func (d digit) multiply(other digit) int {
-	return int(d) * int(other)
+func (d digit) multiply(digit digit) int {
+	return int(d) * int(digit)
 }
 
 func runFFT(signal signal, phases int) signal {
