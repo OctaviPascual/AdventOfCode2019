@@ -67,7 +67,12 @@ func (d Day) SolvePartOne() (string, error) {
 	}
 
 	repairDroid := newRepairDroid(intcodeProgram)
-	return fmt.Sprintf("%d", repairDroid.fewestNumberOfCommandsToOxygen()), nil
+	fewestNumberOfCommandsToOxygen, err := repairDroid.fewestNumberOfCommandsToOxygen(initialPosition)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", fewestNumberOfCommandsToOxygen), nil
 }
 
 // SolvePartTwo solves part two
@@ -78,41 +83,58 @@ func (d Day) SolvePartTwo() (string, error) {
 	}
 
 	repairDroid := newRepairDroid(intcodeProgram)
-	return fmt.Sprintf("%d", repairDroid.minutesToFillWithOxygen()), nil
+	minutesToFillWithOxygen, err := repairDroid.minutesToFillWithOxygen()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", minutesToFillWithOxygen), nil
 }
 
 func newRepairDroid(intcodeProgram *intcode.Intcode) *repairDroid {
 	space := make(map[position]cell)
 	space[initialPosition] = empty
 
-	return &repairDroid{
+	rd := &repairDroid{
 		program:       intcodeProgram,
 		position:      initialPosition,
 		space:         space,
 		inputChannel:  make(chan int),
 		outputChannel: make(chan int),
 	}
+	rd.exploreAllSpace()
+	return rd
 }
 
-func (rd *repairDroid) fewestNumberOfCommandsToOxygen() int {
-	rd.exploreAllSpace()
+func (rd *repairDroid) fewestNumberOfCommandsToOxygen(source position) (int, error) {
 	oxygenPosition := oxygenPosition(rd.space)
-	return len(commandsToPosition(initialPosition, oxygenPosition, rd.space))
-}
+	isTarget := func(position position) bool { return position == oxygenPosition }
 
-func (rd *repairDroid) minutesToFillWithOxygen() int {
-	rd.exploreAllSpace()
-
-	oxygenPosition := oxygenPosition(rd.space)
-
-	maxMinutesToFill := 0
-	for position, cell := range rd.space {
-		if cell == empty {
-			commands := commandsToPosition(oxygenPosition, position, rd.space)
-			maxMinutesToFill = util.Max(len(commands), maxMinutesToFill)
-		}
+	commands, err := commandsToTarget(source, isTarget, rd.space)
+	if err != nil {
+		return -1, errors.New("could not find path to oxygen")
 	}
-	return maxMinutesToFill
+
+	return len(commands), nil
+}
+
+func (rd *repairDroid) minutesToFillWithOxygen() (int, error) {
+	maxMinutesToFill := 0
+
+	for position, cell := range rd.space {
+		if cell != empty {
+			continue
+		}
+
+		fewestNumberOfCommandsToOxygen, err := rd.fewestNumberOfCommandsToOxygen(position)
+		if err != nil {
+			return -1, err
+		}
+
+		maxMinutesToFill = util.Max(fewestNumberOfCommandsToOxygen, maxMinutesToFill)
+	}
+
+	return maxMinutesToFill, nil
 }
 
 func (rd *repairDroid) exploreAllSpace() {
@@ -120,16 +142,16 @@ func (rd *repairDroid) exploreAllSpace() {
 	go func() {
 		errorChannel <- rd.program.Run(rd.inputChannel, rd.outputChannel)
 	}()
-	rd.space[rd.position] = empty
+
 	for {
-		target, err := findNearestUnknownPosition(rd.position, rd.space)
+		isTarget := func(position position) bool { return rd.space[position] == unknown }
+		commands, err := commandsToTarget(rd.position, isTarget, rd.space)
 		if err != nil {
 			return
 		}
 
-		commands := commandsToPosition(rd.position, target, rd.space)
-		for _, c := range commands {
-			rd.move(c)
+		for _, command := range commands {
+			rd.move(command)
 		}
 	}
 }
@@ -212,8 +234,12 @@ func buildCommands(target position, parent map[position]position) []command {
 	return append(buildCommands(source, parent), source.commandTo(target))
 }
 
-// commandsToPosition returns the commands that are needed to go from source to target
-func commandsToPosition(source, target position, space map[position]cell) []command {
+// commandsToTarget returns the commands needed to go from the source position to a target position
+func commandsToTarget(
+	source position,
+	isTarget func(position position) bool,
+	space map[position]cell,
+) ([]command, error) {
 	parent := make(map[position]position)
 
 	queue := []position{source}
@@ -222,8 +248,8 @@ func commandsToPosition(source, target position, space map[position]cell) []comm
 	for len(queue) > 0 {
 		current := queue[0]
 
-		if current == target {
-			return buildCommands(current, parent)
+		if isTarget(current) {
+			return buildCommands(current, parent), nil
 		}
 
 		for _, successor := range current.neighbours() {
@@ -239,32 +265,5 @@ func commandsToPosition(source, target position, space map[position]cell) []comm
 		}
 		queue = queue[1:]
 	}
-	panic(fmt.Sprintf("target position %v is unreachable from source position %v", target, source))
-}
-
-// findNearestUnknownPosition returns the position of the nearest unknown position
-func findNearestUnknownPosition(current position, space map[position]cell) (position, error) {
-	queue := []position{current}
-	visited := map[position]bool{current: true}
-
-	for len(queue) > 0 {
-		current := queue[0]
-
-		if space[current] == unknown {
-			return current, nil
-		}
-
-		for _, successor := range current.neighbours() {
-			if space[successor] == wall {
-				continue
-			}
-
-			if _, ok := visited[successor]; !ok {
-				visited[successor] = true
-				queue = append(queue, successor)
-			}
-		}
-		queue = queue[1:]
-	}
-	return position{}, errors.New("no reachable unknown position found in space")
+	return nil, errors.New("no reachable target position found in space")
 }
