@@ -30,25 +30,19 @@ func (d Day) SolvePartTwo() (string, error) {
 }
 
 func runWithInput(program string, input int) (string, error) {
-	intcodeProgram, err := intcode.NewIntcodeProgram(program)
+	var outputs []string
+	onOutput := func(output int) {
+		outputs = append(outputs, strconv.Itoa(output))
+	}
+
+	intcodeProgram, err := intcode.NewIntcodeProgram(
+		program, func() int { return input }, onOutput,
+	)
 	if err != nil {
 		return "", err
 	}
 
-	inputChannel := make(chan int, 1)
-	inputChannel <- input
-	outputChannel := make(chan int, 1)
-	errorChannel := make(chan error, 1)
-	go func() {
-		errorChannel <- intcodeProgram.Run(inputChannel, outputChannel)
-	}()
-
-	var outputs []string
-	for output := range outputChannel {
-		outputs = append(outputs, strconv.Itoa(output))
-	}
-
-	err = <-errorChannel
+	err = intcodeProgram.Run()
 	if err != nil {
 		return "", err
 	}

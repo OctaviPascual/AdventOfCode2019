@@ -15,28 +15,34 @@ type Program struct {
 	// RelativeBase is the current position of the relative base
 	RelativeBase int
 
-	inputChannel  <-chan int
-	outputChannel chan<- int
+	onInput  func() int
+	onOutput func(output int)
 
 	memory map[int]int
 }
 
 // NewProgram creates a new program from the program string
-func NewProgram(programString string) (*Program, error) {
-	memory, err := parseProgram(programString)
+func NewProgram(
+	programString string,
+	onInput func() int,
+	onOutput func(output int),
+) (*Program, error) {
+	memory, err := newMemory(programString)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Program{
-		memory: memory,
+		memory:   memory,
+		onInput:  onInput,
+		onOutput: onOutput,
 	}, nil
 }
 
-func parseProgram(programString string) (map[int]int, error) {
-	memory := make(map[int]int)
-
+func newMemory(programString string) (map[int]int, error) {
 	tokens := strings.Split(programString, ",")
+
+	memory := make(map[int]int, len(tokens))
 	for i, token := range tokens {
 
 		value, err := strconv.Atoi(token)
@@ -50,35 +56,31 @@ func parseProgram(programString string) (map[int]int, error) {
 	return memory, nil
 }
 
-// Fetch fetches value at given position
+// Fetch fetches Value at given position
 func (p *Program) Fetch(position int) (int, error) {
 	if position < 0 {
 		return 0, fmt.Errorf("fetch error: invalid memory position: %d", position)
 	}
+
 	return p.memory[position], nil
 }
 
-// Store stores value at given position
+// Store stores Value at given position
 func (p *Program) Store(position int, value int) error {
 	if position < 0 {
 		return fmt.Errorf("store error: invalid memory position: %d", position)
 	}
+
 	p.memory[position] = value
 	return nil
 }
 
-// SetChannels sets the input and output channels of the program to the provided ones
-func (p *Program) SetChannels(input <-chan int, output chan<- int) {
-	p.inputChannel = input
-	p.outputChannel = output
-}
-
-// ReadInput reads an input value of the program from the input channel
+// ReadInput reads an input value from onInput function
 func (p *Program) ReadInput() int {
-	return <-p.inputChannel
+	return p.onInput()
 }
 
-// WriteOutput writes the output value to the program
+// WriteOutput writes an output value to onOutput function
 func (p *Program) WriteOutput(output int) {
-	p.outputChannel <- output
+	p.onOutput(output)
 }

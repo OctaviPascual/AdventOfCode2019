@@ -25,7 +25,9 @@ func NewDay(input string) (*Day, error) {
 
 // SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
-	intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+	intcodeProgram, err := intcode.NewIntcodeProgram(
+		d.program, intcode.MustNotInput, intcode.MustNotOutput,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -43,7 +45,9 @@ func (d Day) SolvePartTwo() (string, error) {
 	for noun := 0; noun < 100; noun++ {
 		for verb := 0; verb < 100; verb++ {
 
-			intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+			intcodeProgram, err := intcode.NewIntcodeProgram(
+				d.program, intcode.MustNotInput, intcode.MustNotOutput,
+			)
 			if err != nil {
 				return "", err
 			}

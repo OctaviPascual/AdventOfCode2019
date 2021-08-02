@@ -2,7 +2,6 @@ package day13
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/OctaviPascual/AdventOfCode2019/intcode"
 )
@@ -27,9 +26,18 @@ type pixel struct {
 	x, y int
 }
 
+type action string
+
+const (
+	readX    action = "read_x"
+	readY    action = "read_y"
+	readTile action = "read_tile"
+)
+
 type arcadeCabinet struct {
-	screen  map[pixel]tile
-	program *intcode.Intcode
+	screen      map[pixel]tile
+	nextAction  action
+	x, y, score int
 }
 
 // NewDay returns a new Day that solves part one and two for the given input
@@ -41,17 +49,19 @@ func NewDay(input string) (*Day, error) {
 
 // SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
-	intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+	arcadeCabinet := arcadeCabinet{
+		screen:     make(map[pixel]tile),
+		nextAction: readX,
+	}
+
+	intcodeProgram, err := intcode.NewIntcodeProgram(
+		d.program, intcode.MustNotInput, arcadeCabinet.onOutput(),
+	)
 	if err != nil {
 		return "", err
 	}
 
-	screen := make(map[pixel]tile)
-	arcadeCabinet := arcadeCabinet{
-		screen:  screen,
-		program: intcodeProgram,
-	}
-	err = arcadeCabinet.run()
+	err = intcodeProgram.Run()
 	if err != nil {
 		return "", err
 	}
@@ -61,90 +71,81 @@ func (d Day) SolvePartOne() (string, error) {
 
 // SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
-	intcodeProgram, err := intcode.NewIntcodeProgram("2" + d.program[1:])
-	if err != nil {
-		return "", err
-	}
-
-	screen := make(map[pixel]tile)
 	arcadeCabinet := arcadeCabinet{
-		screen:  screen,
-		program: intcodeProgram,
+		screen:     make(map[pixel]tile),
+		nextAction: readX,
 	}
-	finalScore, err := arcadeCabinet.runWithQuarters()
+
+	intcodeProgram, err := intcode.NewIntcodeProgram(
+		"2"+d.program[1:], arcadeCabinet.onInputWithQuarters(), arcadeCabinet.onOutputWithQuarters(),
+	)
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%d", finalScore), nil
+	err = intcodeProgram.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", arcadeCabinet.score), nil
 }
 
-func (ac *arcadeCabinet) run() error {
-	outputChannel := make(chan int)
-	errorChannel := make(chan error, 1)
-	go func() {
-		errorChannel <- ac.program.Run(nil, outputChannel)
-	}()
-
-	for {
-		x := <-outputChannel
-		y := <-outputChannel
-		tileID := <-outputChannel
-
-		ac.screen[pixel{x, y}] = tile(tileID)
-
-		select {
-		case err := <-errorChannel:
-			return err
-		default:
+func (ac *arcadeCabinet) onOutput() func(output int) {
+	return func(output int) {
+		switch ac.nextAction {
+		case readX:
+			ac.x = output
+			ac.nextAction = readY
+		case readY:
+			ac.y = output
+			ac.nextAction = readTile
+		case readTile:
+			ac.screen[pixel{ac.x, ac.y}] = tile(output)
+			ac.nextAction = readX
 		}
 	}
 }
 
-func (ac *arcadeCabinet) runWithQuarters() (int, error) {
-	inputChannel := make(chan int)
-	outputChannel := make(chan int)
-	errorChannel := make(chan error, 1)
-	go func() {
-		errorChannel <- ac.program.Run(inputChannel, outputChannel)
-	}()
+func (ac *arcadeCabinet) onInputWithQuarters() func() int {
+	return func() int {
+		ballPixel, err := ac.tilePosition(ball)
+		if err != nil {
+			return 0
+		}
 
-	var score int
-	for {
-		select {
-		case err := <-errorChannel:
-			return score, err
-		case x := <-outputChannel:
-			y := <-outputChannel
+		horizontalPaddlePixel, err := ac.tilePosition(horizontalPaddle)
+		if err != nil {
+			return 0
+		}
 
-			if x == -1 && y == 0 {
-				score = <-outputChannel
+		if horizontalPaddlePixel.x < ballPixel.x {
+			return 1
+		}
+		if horizontalPaddlePixel.x > ballPixel.x {
+			return -1
+		}
+
+		return 0
+	}
+}
+
+func (ac *arcadeCabinet) onOutputWithQuarters() func(output int) {
+	return func(output int) {
+		switch ac.nextAction {
+		case readX:
+			ac.x = output
+			ac.nextAction = readY
+		case readY:
+			ac.y = output
+			ac.nextAction = readTile
+		case readTile:
+			if ac.x == -1 && ac.y == 0 {
+				ac.score = output
 			} else {
-				tileID := <-outputChannel
-				ac.screen[pixel{x, y}] = tile(tileID)
+				ac.screen[pixel{ac.x, ac.y}] = tile(output)
 			}
-		// Leave the program enough time to execute itself
-		// If we can't read an output, we assume the program is waiting for an input
-		// This is not ideal, but I couldn't come with a better way of knowing when the program is
-		// expecting an input without changing Intcode API
-		case <-time.After(200 * time.Microsecond):
-			ballPixel, err := ac.tilePosition(ball)
-			if err != nil {
-				return 0, err
-			}
-
-			horizontalPaddlePixel, err := ac.tilePosition(horizontalPaddle)
-			if err != nil {
-				return 0, err
-			}
-
-			if horizontalPaddlePixel.x < ballPixel.x {
-				inputChannel <- 1
-			} else if horizontalPaddlePixel.x > ballPixel.x {
-				inputChannel <- -1
-			} else {
-				inputChannel <- 0
-			}
+			ac.nextAction = readX
 		}
 	}
 }

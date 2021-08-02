@@ -44,11 +44,10 @@ type position struct {
 }
 
 type repairDroid struct {
-	program       *intcode.Intcode
 	position      position
 	space         map[position]cell
-	inputChannel  chan int
-	outputChannel chan int
+	inputChannel  chan<- int
+	outputChannel <-chan int
 	foundOxygen   bool
 }
 
@@ -61,12 +60,11 @@ func NewDay(input string) (*Day, error) {
 
 // SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
-	intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+	repairDroid, err := newRepairDroid(d.program)
 	if err != nil {
 		return "", err
 	}
 
-	repairDroid := newRepairDroid(intcodeProgram)
 	fewestNumberOfCommandsToOxygen, err := repairDroid.fewestNumberOfCommandsToOxygen(initialPosition)
 	if err != nil {
 		return "", err
@@ -77,12 +75,10 @@ func (d Day) SolvePartOne() (string, error) {
 
 // SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
-	intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+	repairDroid, err := newRepairDroid(d.program)
 	if err != nil {
 		return "", err
 	}
-
-	repairDroid := newRepairDroid(intcodeProgram)
 	minutesToFillWithOxygen, err := repairDroid.minutesToFillWithOxygen()
 	if err != nil {
 		return "", err
@@ -91,19 +87,42 @@ func (d Day) SolvePartTwo() (string, error) {
 	return fmt.Sprintf("%d", minutesToFillWithOxygen), nil
 }
 
-func newRepairDroid(intcodeProgram *intcode.Intcode) *repairDroid {
+func newRepairDroid(program string) (*repairDroid, error) {
 	space := make(map[position]cell)
 	space[initialPosition] = empty
 
+	inputChannel := make(chan int)
+	outputChannel := make(chan int)
+
 	rd := &repairDroid{
-		program:       intcodeProgram,
 		position:      initialPosition,
 		space:         space,
-		inputChannel:  make(chan int),
-		outputChannel: make(chan int),
+		inputChannel:  inputChannel,
+		outputChannel: outputChannel,
 	}
+
+	onInput := func() int {
+		return <-inputChannel
+	}
+
+	onOutput := func(output int) {
+		outputChannel <- output
+	}
+
+	intcodeProgram, err := intcode.NewIntcodeProgram(program, onInput, onOutput)
+	if err != nil {
+		return nil, err
+	}
+
+	// The program provided doesn't finish as it's always waiting for a new input instruction.
+	// We will only return an error if it returns an error while exploring all the space.
+	go func() {
+		err = intcodeProgram.Run()
+	}()
 	rd.exploreAllSpace()
-	return rd
+	intcodeProgram.Stop()
+
+	return rd, err
 }
 
 func (rd *repairDroid) fewestNumberOfCommandsToOxygen(source position) (int, error) {
@@ -138,11 +157,6 @@ func (rd *repairDroid) minutesToFillWithOxygen() (int, error) {
 }
 
 func (rd *repairDroid) exploreAllSpace() {
-	errorChannel := make(chan error, 1)
-	go func() {
-		errorChannel <- rd.program.Run(rd.inputChannel, rd.outputChannel)
-	}()
-
 	for {
 		isTarget := func(position position) bool { return rd.space[position] == unknown }
 		commands, err := commandsToTarget(rd.position, isTarget, rd.space)

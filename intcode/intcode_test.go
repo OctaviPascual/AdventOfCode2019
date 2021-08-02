@@ -48,7 +48,7 @@ func TestRunWithNounAndVerb(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			program, err := NewIntcodeProgram(testCase.program)
+			program, err := NewIntcodeProgram(testCase.program, MustNotInput, MustNotOutput)
 			require.NoError(t, err)
 
 			output, err := program.RunWithNounAndVerb(testCase.noun, testCase.verb)
@@ -141,16 +141,19 @@ func TestRunWithInput(t *testing.T) {
 
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			program, err := NewIntcodeProgram(testCase.program)
+			onInput := func() int {
+				return testCase.input
+			}
+
+			onOutput := func(output int) {
+				assert.Equal(t, testCase.expected, output)
+			}
+
+			program, err := NewIntcodeProgram(testCase.program, onInput, onOutput)
 			require.NoError(t, err)
 
-			inputChannel := make(chan int, 1)
-			inputChannel <- testCase.input
-			outputChannel := make(chan int, 1)
-			err = program.Run(inputChannel, outputChannel)
+			err = program.Run()
 			require.NoError(t, err)
-
-			assert.Equal(t, testCase.expected, <-outputChannel)
 		})
 	}
 }

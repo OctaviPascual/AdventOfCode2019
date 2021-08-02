@@ -72,10 +72,17 @@ type panel struct {
 
 type grid map[panel]color
 
+type action string
+
+const (
+	paint action = "paint"
+	turn  action = "turn"
+)
+
 type robot struct {
-	program     *intcode.Intcode
 	panel       panel
 	orientation orientation
+	nextAction  action
 }
 
 // NewDay returns a new Day that solves part one and two for the given input
@@ -87,37 +94,41 @@ func NewDay(input string) (*Day, error) {
 
 // SolvePartOne solves part one
 func (d Day) SolvePartOne() (string, error) {
-	intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+	grid := grid(make(map[panel]color))
+	robot := newRobot()
+
+	intcodeProgram, err := intcode.NewIntcodeProgram(
+		d.program, robot.onInput(grid), robot.onOutput(grid),
+	)
 	if err != nil {
 		return "", err
 	}
 
-	grid := grid(make(map[panel]color))
-	robot := robot{
-		program:     intcodeProgram,
-		panel:       panel{0, 0},
-		orientation: up,
+	err = intcodeProgram.Run()
+	if err != nil {
+		return "", err
 	}
-	robot.run(grid)
 
 	return fmt.Sprintf("%d", grid.numberOfPaintedPanels()), nil
 }
 
 // SolvePartTwo solves part two
 func (d Day) SolvePartTwo() (string, error) {
-	intcodeProgram, err := intcode.NewIntcodeProgram(d.program)
+	grid := grid(make(map[panel]color))
+	grid[panel{0, 0}] = white
+	robot := newRobot()
+
+	intcodeProgram, err := intcode.NewIntcodeProgram(
+		d.program, robot.onInput(grid), robot.onOutput(grid),
+	)
 	if err != nil {
 		return "", err
 	}
 
-	grid := grid(make(map[panel]color))
-	grid[panel{0, 0}] = white
-	robot := robot{
-		program:     intcodeProgram,
-		panel:       panel{0, 0},
-		orientation: up,
+	err = intcodeProgram.Run()
+	if err != nil {
+		return "", err
 	}
-	robot.run(grid)
 
 	topLeft := grid.topLeftPanel()
 	bottomRight := grid.bottomRightPanel()
@@ -125,35 +136,37 @@ func (d Day) SolvePartTwo() (string, error) {
 	return grid.renderHull(topLeft, bottomRight), nil
 }
 
-func (r *robot) run(grid grid) {
-	inputChannel := make(chan int, 1)
-	outputChannel := make(chan int, 2)
-	errorChannel := make(chan error, 1)
-	go func() {
-		errorChannel <- r.program.Run(inputChannel, outputChannel)
-	}()
-
-	for {
-		inputChannel <- int(grid[r.panel])
-
-		colorToPaint := <-outputChannel
-		r.paintPanel(grid, color(colorToPaint))
-
-		directionToTurn := <-outputChannel
-		r.turn(direction(directionToTurn))
-
-		r.moveOneStepForward()
-
-		select {
-		case <-errorChannel:
-			return
-		default:
-		}
+func newRobot() *robot {
+	return &robot{
+		panel:       panel{0, 0},
+		orientation: up,
+		nextAction:  paint,
 	}
 }
 
-func (r robot) paintPanel(grid grid, colorToPaint color) {
-	grid[r.panel] = colorToPaint
+func (r robot) paintPanel(grid grid, color color) {
+	grid[r.panel] = color
+}
+
+func (r *robot) onInput(grid grid) func() int {
+	return func() int {
+		fmt.Println(int(grid[r.panel]))
+		return int(grid[r.panel])
+	}
+}
+
+func (r *robot) onOutput(grid grid) func(output int) {
+	return func(output int) {
+		switch r.nextAction {
+		case paint:
+			r.paintPanel(grid, color(output))
+			r.nextAction = turn
+		case turn:
+			r.turn(direction(output))
+			r.moveOneStepForward()
+			r.nextAction = paint
+		}
+	}
 }
 
 func (r *robot) turn(direction direction) {

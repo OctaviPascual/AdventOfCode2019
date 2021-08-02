@@ -3,9 +3,9 @@ package day07
 import (
 	"fmt"
 
-	"github.com/OctaviPascual/AdventOfCode2019/intcode"
-
 	"golang.org/x/sync/errgroup"
+
+	"github.com/OctaviPascual/AdventOfCode2019/intcode"
 )
 
 type amplifier struct {
@@ -102,12 +102,20 @@ func thrusterSignalInSeries(amplifiers []amplifier, program string) (int, error)
 	amplifiers[0].input <- firstSignal
 
 	for _, amplifier := range amplifiers {
-		intcodeProgram, err := intcode.NewIntcodeProgram(program)
+		onInput := func() int {
+			return <-amplifier.input
+		}
+
+		onOutput := func(output int) {
+			amplifier.output <- output
+		}
+
+		intcodeProgram, err := intcode.NewIntcodeProgram(program, onInput, onOutput)
 		if err != nil {
 			return 0, err
 		}
 
-		err = intcodeProgram.Run(amplifier.input, amplifier.output)
+		err = intcodeProgram.Run()
 		if err != nil {
 			return 0, err
 		}
@@ -140,15 +148,24 @@ func thrusterSignalWithFeedbackLoop(amplifiers []amplifier, program string) (int
 
 	var group errgroup.Group
 	for _, amplifier := range amplifiers {
-		intcodeProgram, err := intcode.NewIntcodeProgram(program)
+		// create local variable for closures
+		amplifier := amplifier
+
+		onInput := func() int {
+			return <-amplifier.input
+		}
+
+		onOutput := func(output int) {
+			amplifier.output <- output
+		}
+
+		intcodeProgram, err := intcode.NewIntcodeProgram(program, onInput, onOutput)
 		if err != nil {
 			return 0, err
 		}
 
-		// create local variable for closure below
-		amplifier := amplifier
 		group.Go(func() error {
-			return intcodeProgram.Run(amplifier.input, amplifier.output)
+			return intcodeProgram.Run()
 		})
 	}
 	err := group.Wait()
