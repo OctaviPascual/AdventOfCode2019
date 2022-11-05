@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/OctaviPascual/AdventOfCode2019/day01"
@@ -142,7 +142,7 @@ var days = []struct {
 func main() {
 	for i, day := range days {
 		fmt.Printf("\nRunning day %d\n", i+1)
-		bytes, err := ioutil.ReadFile(day.filename)
+		bytes, err := os.ReadFile(day.filename)
 		if err != nil {
 			log.Fatalf("could not read file %s: %v", day.filename, err)
 		}
